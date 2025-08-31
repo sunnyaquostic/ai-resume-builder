@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Dict, Optional
 
 class CreateUserSchema(BaseModel):
     email: str
@@ -7,16 +7,11 @@ class CreateUserSchema(BaseModel):
     password: str = Field(..., min_length=8)
     confirm_password: str = Field(..., min_length=8)
     
-class CreateUserResponseSchema(BaseModel):
+class AuthResponse(BaseModel):
     success: bool
     message: str
-    error: None
-
-class UserLoginResponseSchema(BaseModel):
-    id: int
-    email: str
-    name: str
-    appwrite_token: str
+    error: Optional[str] = None
+    userInfo: Optional[Dict] = None
 
 class UserLoginSchema(BaseModel):
     email: str
