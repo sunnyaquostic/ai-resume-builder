@@ -14,5 +14,7 @@ export interface AuthResponse {
     success: boolean
     message: string
     error: string | null 
-    userInfo: object | null
+    user: object | null
+    isAuthenticated: boolean
+    loading: false
 }

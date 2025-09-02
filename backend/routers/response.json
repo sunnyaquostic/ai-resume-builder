@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "message": "You logged in successfully",
+  "error": null,
+  "userInfo": {
+    "$id": "68b659b1175eb8a579e0",
+    "$createdAt": "2025-09-02T02:42:57.104+00:00",
+    "$updatedAt": "2025-09-02T02:42:57.104+00:00",
+    "userId": "68b658b05d902bd2d902",
+    "expire": "2026-09-02T02:42:57.095+00:00",
+    "provider": "email",
+    "providerUid": "email@gmail.com",
+    "providerAccessToken": "",
+    "providerAccessTokenExpiry": "",
+    "providerRefreshToken": "",
+    "ip": "197.211.59.101",
+    "osCode": "WIN",
+    "osName": "Windows",
+    "osVersion": "10.0",
+    "clientType": "",
+    "clientCode": "",
+    "clientName": "",
+    "clientVersion": "",
+    "clientEngine": "",
+    "clientEngineVersion": "",
+    "deviceName": "desktop",
+    "deviceBrand": "",
+    "deviceModel": "",
+    "countryCode": "ng",
+    "countryName": "Nigeria",
+    "current": true,
+    "factors": [
+      "password"
+    ],
+    "secret": "eyJpZCI6IjY4YjY1OGIwNWQ5MDJiZDJkOTAyIiwic2VjcmV0IjoiM2QyZWZiZGZlYzg2MGIwODBlYTE3MDNjM2IwNDgzZWJmNDZhMzU0Mjg2YzI5NTcxMWYyNTU3OWIxYjdkYWI1YzIyZGY3N2Y5OWI4MTY0OWJmM2RiYWY3MDRhNjJmNGEzZTliMWYyNTlmYzE5OWFiYmM3ZTZhYmUzZDYxMzM5NzQxODIwY2RjZWNjYTU4YmQzMjU2MmVhMTM2NDVkMGE4OTNkMGI5YjU2ODU2OWJjNDgzMTAxMjhiYmI4YmNmNjZlODA3MWRkMzUzOTdmMmJkNGJkNWExZTQ2ZGJmMjI4MDc1NzUxZjQzNGY0ODFhZWM4MjQ0MDkwMTdjNzEyNDhjMyJ9",
+    "mfaUpdatedAt": ""
+  }
+}

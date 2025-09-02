@@ -4,6 +4,7 @@ from schema.userschema import CreateUserSchema, UserLoginSchema, AuthResponse
 from appwrite.services.users import Users
 from appwrite.services.account import Account
 from core.appwrite import get_user_register, get_account
+from core.config import settings
 
 
 router = APIRouter(
@@ -12,7 +13,7 @@ router = APIRouter(
 ) 
 
 @router.post('/signup', response_model=AuthResponse)
-def register(user_data: CreateUserSchema, user: Users = Depends(get_user_register)):
+def register(user_data: CreateUserSchema, account: Account = Depends(get_account)):
     name = user_data.name
     email = user_data.email
     password = user_data.password
@@ -22,30 +23,38 @@ def register(user_data: CreateUserSchema, user: Users = Depends(get_user_registe
         raise HTTPException(status_code=400, detail="Passwords do not match")
             
     try: 
-        new_user = user.create (
+        new_user = account.create(
             user_id="unique()",
             email=email,
             password=password,
-            name=name
+            name=name,
         )
         
-        return {                
-                'success': 'true',
-                'message': 'You registered successfully',
-                'user': new_user,
-                'error': None
-            }
+        return AuthResponse(
+            success=True,
+            message="You registered successfully",
+            userInfo=dict(new_user),
+            error=None,
+        )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return AuthResponse(
+            success=False,
+            message="Registration failed",
+            error=str(e),  
+            userInfo=None
+        )
     
 @router.post('/login', response_model=AuthResponse)
-def login(userData: UserLoginSchema, response: Response,  account: Account = Depends(get_account)):
+def login(userData: UserLoginSchema, response: Response, account: Account = Depends(get_account), users: Users = Depends(get_user_register)):
     try:
         user_session = account.create_email_password_session(
             email=userData.email,
             password=userData.password
         )
-        jwt = account.create_jwt()
+        
+        jwt = users.create_jwt(
+            user_id=user_session['userId']
+        )
 
         response.set_cookie(
             key="access_token",
@@ -58,29 +67,46 @@ def login(userData: UserLoginSchema, response: Response,  account: Account = Dep
         
         userinfo = {
             "userid": user_session['userId'],
-            "username": user_session['name'],
-            "email": user_session['email'],
+            "email": user_session['providerUid'],
+            "session_id": user_session['secret']
+            # "created_at": user_session['createdAt'],
         }
         
-        return {
-            "success": True,
-            "message": "You logged in successfully",
-            "error": None,
-            "userInfo": userinfo 
-        }
+        return AuthResponse(
+            success=True,
+            message="You logged in successfully",
+            userInfo=dict(user_session),
+            error=None,
+        )
+        
     except Exception as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return AuthResponse(
+            success=False,
+            message="Login failed",
+            error=str(e),
+            userInfo=None
+        )
+
+@router.get('/verify')
+def verify_email(userId: str, secret: str, account: Account = Depends(get_account)):
+    try:
+        result = account.update_verification(user_id=userId, secret=secret)
+        return {"success": True, "message": "Email verified successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
 @router.post('/logout', response_model=AuthResponse)
 def logout(response: Response, account: Account = Depends(get_account)):
     try:
-        account.delete_sessions("current")
-        
-        response.delete_cookie(
-            key="access_token",
-            httponly=True,
-            secure=True
+        account.delete_sessions(
+            session_id="current"
         )
+        
+        # response.delete_cookie(
+        #     key="access_token",
+        #     httponly=True,
+        #     secure=True
+        # )
 
         return {
             "success": True,

@@ -1,5 +1,4 @@
-from fastapi import Request, HTTPException
-from appwrite.client import Client
+from fastapi import Request, HTTPException, Depends
 from appwrite.services.account import Account
 from core.appwrite import get_client, get_account
 
@@ -14,8 +13,8 @@ def authenticate_user(request: Request):
     
     try:
         client.set_jwt(token)
-        user = account.get()
-    except Exception as e:
+        user = account.get()   # validates JWT and fetches user info
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid or Expired Token")
     
     return user
