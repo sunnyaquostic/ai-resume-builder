@@ -12,7 +12,7 @@ router = APIRouter(
     tags=['users']
 ) 
 
-@router.post('/createresuming')
+@router.post('/createresume')
 def create_resume(data):
     pass
 

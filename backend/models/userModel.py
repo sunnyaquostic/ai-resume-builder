@@ -21,8 +21,13 @@ def create_user_collection(db_id: str, db: Databases = Depends(get_database)):
         db.create_string_attribute(db_id, collection_id, "name", 100, required=True)
         db.create_email_attribute(db_id, collection_id, "email", required=True)
         db.create_string_attribute(db_id, collection_id, "password", 255, required=True)
+        db.create_string_attribute(db_id, collection_id, "bio", 3000, required=True)
+        db.create_string_attribute(db_id, collection_id, "number", 3000, required=True)
+        db.create_string_attribute(db_id, collection_id, "linkedin", 3000, required=True)
+        db.create_string_attribute(db_id, collection_id, "github", 3000, required=True)
+        db.create_string_attribute(db_id, collection_id, "profilePicture", 250, required=True)
         db.create_string_attribute(db_id, collection_id, "role", 50, required=False, default="user")
-    
+
         education = db.create_collection(db_id, "education", "Education", False, True)
         db.create_string_attribute(db_id, "education", "institution", 225, required=True)
         db.create_string_attribute(db_id, "education", "degree", 100, required=True)
