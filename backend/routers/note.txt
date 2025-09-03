@@ -1,0 +1,460 @@
+1. Users
+
+You already manage authentication with Appwrite’s account service, so you may not need to create a users collection manually. But you can extend with a profile collection if you want more info.
+
+Collection: profiles
+
+userId (string, Appwrite userId – relation to account)
+
+bio (string)
+
+profilePicture (string / file ID)
+
+phone (string)
+
+address (string)
+
+linkedin (string)
+
+github (string)
+
+2. Resumes
+
+Each user can generate multiple resumes.
+
+Collection: resumes
+
+resumeId (auto, Appwrite docId)
+
+userId (relation → profiles.userId)
+
+title (string, e.g. "Frontend Resume")
+
+template (string, template ID/slug used)
+
+createdAt (datetime)
+
+updatedAt (datetime)
+
+3. Sections (Modular Resume Data)
+
+Resume sections like Education, Experience, Skills, etc.
+
+Collection: sections
+
+resumeId (relation → resumes.resumeId)
+
+type (enum: "education", "experience", "skills", "projects", "certifications", "summary")
+
+order (int – to arrange sections in resume)
+
+4. Education
+
+Collection: education
+
+sectionId (relation → sections.sectionId)
+
+school (string)
+
+degree (string)
+
+fieldOfStudy (string)
+
+startDate (date)
+
+endDate (date)
+
+grade (string, optional)
+
+description (text, optional)
+
+5. Experience
+
+Collection: experience
+
+sectionId (relation → sections.sectionId)
+
+company (string)
+
+role (string)
+
+startDate (date)
+
+endDate (date / "Present")
+
+responsibilities (array of strings / text)
+
+6. Projects
+
+Collection: projects
+
+sectionId (relation → sections.sectionId)
+
+name (string)
+
+description (text)
+
+technologies (array of strings)
+
+link (string)
+
+7. Skills
+
+Collection: skills
+
+sectionId (relation → sections.sectionId)
+
+name (string)
+
+level (enum: Beginner, Intermediate, Advanced, Expert)
+
+8. Certifications
+
+Collection: certifications
+
+sectionId (relation → sections.sectionId)
+
+title (string)
+
+issuer (string)
+
+date (date)
+
+credentialId (string, optional)
+
+link (string, optional)
+
+⚡ With this setup:
+
+A User → has many Resumes
+
+A Resume → has many Sections
+
+Each Section → holds data in its corresponding collection (education, experience, skills, etc.)
+
+👉 Do you want me to draw the ERD (Entity Relationship Diagram) for this Appwrite schema so you can visualize how the collections link together?
+
+
+
+
+
+
+
+
+Got it ✅ — you want Appwrite-managed relations so everything is tied together automatically, and your backend/frontend won’t have to manually manage IDs.
+
+Here’s the clean schema design for AI Resume Builder using Appwrite Database + Relations:
+
+Collections & Relations
+
+profiles
+
+userId (string, required, unique → linked to Appwrite Account)
+
+fullName (string, required)
+
+email (string, required, unique)
+
+phone (string, optional)
+
+summary (text, optional)
+
+🔗 Relation: One-to-Many with resumes (profile → resumes).
+
+resumes
+
+profile (relation → profiles, required)
+
+title (string, required → e.g., "Software Engineer Resume")
+
+theme (enum/string → "classic", "modern", "minimal")
+
+createdAt (datetime, default = now)
+
+updatedAt (datetime, auto-update)
+
+🔗 Relations:
+
+One-to-Many → education
+
+One-to-Many → experience
+
+One-to-Many → projects
+
+One-to-Many → skills
+
+One-to-Many → certifications
+
+education
+
+resume (relation → resumes, required)
+
+school (string, required)
+
+degree (string, required)
+
+fieldOfStudy (string, optional)
+
+startDate (date)
+
+endDate (date, nullable for "current")
+
+description (text, optional)
+
+experience
+
+resume (relation → resumes, required)
+
+company (string, required)
+
+role (string, required)
+
+startDate (date)
+
+endDate (date, nullable for "present")
+
+responsibilities (text, optional)
+
+projects
+
+resume (relation → resumes, required)
+
+name (string, required)
+
+description (text, required)
+
+technologies (string list, optional)
+
+link (string/url, optional)
+
+skills
+
+resume (relation → resumes, required)
+
+name (string, required)
+
+level (enum/string → "beginner", "intermediate", "advanced")
+
+certifications (optional but nice)
+
+resume (relation → resumes, required)
+
+name (string, required)
+
+issuer (string, optional)
+
+dateIssued (date)
+
+expiryDate (date, optional)
+
+
+
+
+Database: default
+
+Collections:
+
+Profiles
+
+userId (string, required, unique) → Appwrite User ID
+
+fullName (string, required)
+
+email (string, required, unique)
+
+phone (string, optional)
+
+summary (text, optional)
+
+Relation → Resumes (1-to-many)
+
+Resumes
+
+profileId (relation → Profiles, required)
+
+title (string, required, e.g. “Frontend Developer Resume”)
+
+templateId (string, optional → for selecting template style)
+
+Relation → Education, Experience, Projects, Skills, Certifications
+
+Education
+
+resumeId (relation → Resumes, required)
+
+institution (string, required)
+
+degree (string, optional)
+
+fieldOfStudy (string, optional)
+
+startDate (date, optional)
+
+endDate (date, optional)
+
+Experience
+
+resumeId (relation → Resumes, required)
+
+company (string, required)
+
+position (string, required)
+
+startDate (date, optional)
+
+endDate (date, optional)
+
+description (text, optional)
+
+Projects
+
+resumeId (relation → Resumes, required)
+
+name (string, required)
+
+description (text, optional)
+
+technologies (array<string>, optional)
+
+link (string, optional)
+
+Skills
+
+resumeId (relation → Resumes, required)
+
+name (string, required)
+
+level (string, optional → Beginner/Intermediate/Expert)
+
+Certifications
+
+resumeId (relation → Resumes, required)
+
+name (string, required)
+
+organization (string, optional)
+
+issueDate (date, optional)
+
+expiryDate (date, optional)
+
+Indexes
+
+Profiles: unique index on email
+
+Profiles: unique index on userId
+
+Each sub-collection: index on resumeId for fast lookup
+
+
+Perfect 🚀 I’ll prepare the Appwrite JSON schema for you.
+This file can be imported into Appwrite Console → Database → Import Schema.
+
+Here’s the schema:
+
+{
+  "version": "1.0",
+  "collections": [
+    {
+      "name": "Profiles",
+      "attributes": [
+        { "key": "userId", "type": "string", "required": true, "array": false },
+        { "key": "fullName", "type": "string", "required": true, "array": false },
+        { "key": "email", "type": "string", "required": true, "array": false },
+        { "key": "phone", "type": "string", "required": false, "array": false },
+        { "key": "summary", "type": "text", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "email_unique", "type": "unique", "attributes": ["email"] },
+        { "key": "userId_unique", "type": "unique", "attributes": ["userId"] }
+      ]
+    },
+    {
+      "name": "Resumes",
+      "attributes": [
+        { "key": "profileId", "type": "string", "required": true, "array": false },
+        { "key": "title", "type": "string", "required": true, "array": false },
+        { "key": "templateId", "type": "string", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "profileId_index", "type": "key", "attributes": ["profileId"] }
+      ]
+    },
+    {
+      "name": "Education",
+      "attributes": [
+        { "key": "resumeId", "type": "string", "required": true, "array": false },
+        { "key": "institution", "type": "string", "required": true, "array": false },
+        { "key": "degree", "type": "string", "required": false, "array": false },
+        { "key": "fieldOfStudy", "type": "string", "required": false, "array": false },
+        { "key": "startDate", "type": "datetime", "required": false, "array": false },
+        { "key": "endDate", "type": "datetime", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "resumeId_index", "type": "key", "attributes": ["resumeId"] }
+      ]
+    },
+    {
+      "name": "Experience",
+      "attributes": [
+        { "key": "resumeId", "type": "string", "required": true, "array": false },
+        { "key": "company", "type": "string", "required": true, "array": false },
+        { "key": "position", "type": "string", "required": true, "array": false },
+        { "key": "startDate", "type": "datetime", "required": false, "array": false },
+        { "key": "endDate", "type": "datetime", "required": false, "array": false },
+        { "key": "description", "type": "text", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "resumeId_index", "type": "key", "attributes": ["resumeId"] }
+      ]
+    },
+    {
+      "name": "Projects",
+      "attributes": [
+        { "key": "resumeId", "type": "string", "required": true, "array": false },
+        { "key": "name", "type": "string", "required": true, "array": false },
+        { "key": "description", "type": "text", "required": false, "array": false },
+        { "key": "technologies", "type": "string", "required": false, "array": true },
+        { "key": "link", "type": "string", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "resumeId_index", "type": "key", "attributes": ["resumeId"] }
+      ]
+    },
+    {
+      "name": "Skills",
+      "attributes": [
+        { "key": "resumeId", "type": "string", "required": true, "array": false },
+        { "key": "name", "type": "string", "required": true, "array": false },
+        { "key": "level", "type": "string", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "resumeId_index", "type": "key", "attributes": ["resumeId"] }
+      ]
+    },
+    {
+      "name": "Certifications",
+      "attributes": [
+        { "key": "resumeId", "type": "string", "required": true, "array": false },
+        { "key": "name", "type": "string", "required": true, "array": false },
+        { "key": "organization", "type": "string", "required": false, "array": false },
+        { "key": "issueDate", "type": "datetime", "required": false, "array": false },
+        { "key": "expiryDate", "type": "datetime", "required": false, "array": false }
+      ],
+      "indexes": [
+        { "key": "resumeId_index", "type": "key", "attributes": ["resumeId"] }
+      ]
+    }
+  ]
+}
+
+
+✅ This will:
+
+Create all 7 collections automatically.
+
+Add attributes and indexes.
+
+Enforce uniqueness on email and userId.
+
+Link everything by profileId → resumeId.
