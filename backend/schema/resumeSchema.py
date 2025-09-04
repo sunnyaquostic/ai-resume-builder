@@ -7,28 +7,28 @@ class ProfileSchema(BaseModel):
     userId: str
     name: str
     email: str
-    bio: str
-    profilePicture: Optional[str]
-    phone: Optional[str]= Field(..., min_length=6, max_length=24)
-    address: Optional[str]
-    linkedin: Optional[str]
-    github: Optional[str]
+    bio: Optional[str] = None
+    profilePicture: Optional[str] = None
+    phone: Optional[str] = Field(None, min_length=6, max_length=24)
+    address: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
     
-class Resume(BaseModel):
+class ResumeSchema(BaseModel):
     resumeId: str
     UserId: str
     title: str
     template: str
-    createdAt: datetime
-    updatedAt: datetime
+    createdAt: Optional[datetime]
+    updatedAt: Optional[datetime]
 
-class Section(BaseModel):
+class SectionSchema(BaseModel):
     sectionId: str
     resumeId: str
     type: str = Field(..., pattern="^(education|experience|skills|projects|certifications|summary)$")
     order: int
 
-class Education(BaseModel):
+class EducationSchema(BaseModel):
     sectionId: str
     school: str
     degree: str

@@ -22,6 +22,7 @@ def get_resume(data):
 
 @router.get('/resuming/{id}')
 def get_single_resume(id):
+    pass
 
 
 @router.put('/resuming/update/{id}')

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     APPWRITE_PROJECT_ID: str
     APPWRITE_ENDPOINT: str
     APPWRITE_API_KEY: str
+    APPWRITE_DATABASE_ID: str
 
     def __init__(self, **values):
         super().__init__(**values)

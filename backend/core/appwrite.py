@@ -32,8 +32,8 @@ def get_account():
     
     return Account(client)
 
-def get_database():
-    db = get_database()
+def database():
+    db = get_client()
     
     return Databases(db)
  

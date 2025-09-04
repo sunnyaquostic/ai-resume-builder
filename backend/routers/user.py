@@ -5,7 +5,11 @@ from appwrite.services.users import Users
 from appwrite.services.account import Account
 from core.appwrite import get_user_register, get_account
 from core.config import settings
-
+from db.database import create_database, get_databases
+from models.userModel import create_user_collection
+from core.config import settings
+create_user_collection(settings.APPWRITE_DATABASE_ID)
+# print(get_databases())
 
 router = APIRouter(
     prefix='/v1',
