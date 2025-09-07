@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
-import uuid
-from schema.userschema import CreateUserSchema, UserLoginSchema, AuthResponse
+from api.profile import check_profile_exists
+from schema.userschema import CreateUserSchema, UserLoginSchema, AuthResponse, ProfileSchema, ProfileInputSchema
 from appwrite.services.users import Users
 from appwrite.services.account import Account
-from core.appwrite import get_user_register, get_account
+from core.appwrite import get_account
+from models.userModel import create_user, update_users, get_user_profile
+from api.auth import authenticate_user
 from core.config import settings
-from db.database import create_database, get_databases
-from models.userModel import create_user_collection
-from core.config import settings
-create_user_collection(settings.APPWRITE_DATABASE_ID)
-# print(get_databases())
+from core.appwrite import get_user_register
+import jwt
+import datetime
 
 router = APIRouter(
     prefix='/v1',
@@ -47,49 +47,121 @@ def register(user_data: CreateUserSchema, account: Account = Depends(get_account
             error=str(e),  
             userInfo=None
         )
-    
+
 @router.post('/login', response_model=AuthResponse)
 def login(userData: UserLoginSchema, response: Response, account: Account = Depends(get_account), users: Users = Depends(get_user_register)):
+    user_session = account.create_email_password_session(
+        email=userData.email,
+        password=userData.password
+    )
+
+    payload = {
+        "user_id":user_session['userId'],
+        "email":user_session['providerUid'], 
+        "secret":user_session['secret'],
+        "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2)
+    }
+    jwt_token = jwt.encode(
+        payload, 
+        settings.SECRET_KEY, 
+        settings.ALGORITHM
+    )
+
+    response.set_cookie(
+        key="access_token",
+        value=jwt_token,
+        httponly=True, 
+        secure=False,  
+        samesite="lax",  
+        max_age=7200      
+    )
+
+    return AuthResponse(
+        success=True,
+        message="You logged in successfully",
+        userInfo={
+            "id": user_session['userId'],
+            "email": user_session['providerUid'],
+            "name": users.get(user_session['userId'])['name'] 
+        },
+        error=None,
+    )
+    
+@router.post('/profile/create')
+def create_profile(data: ProfileInputSchema, current_user = Depends(authenticate_user)):
+
     try:
-        user_session = account.create_email_password_session(
-            email=userData.email,
-            password=userData.password
-        )
+        existing = check_profile_exists(current_user['userId'])
+
+        profile_data = data.model_dump()
+        profile_data.update({
+            "user_id": current_user['userId'],
+            "email": current_user.get('email', ''),
+            "name": data.name or current_user.get('name', '')
+        })
         
-        jwt = users.create_jwt(
-            user_id=user_session['userId']
+        if existing[0] == False:  
+            user = create_user(
+                profile_data, 
+                settings.APPWRITE_DATABASE_ID, 
+                settings.APPWRITE_USER_COLLECTION_ID, 
+                profile_data['user_id']
+            )
+            
+            res = "Profile created successfully"
+        else: 
+            user = update_users(
+                settings.APPWRITE_DATABASE_ID, 
+                settings.APPWRITE_USER_COLLECTION_ID, 
+                existing[1],
+                data.model_dump(exclude_unset=True), 
+            )
+            res = "Profile updated successfully"
+            
+        return ProfileSchema(
+            docId=user['$id'],
+            user_id=user['user_id'],
+            name=user['name'],
+            email=user['email'],
+            bio=user.get('bio', None),
+            phone=user.get('phone', None),
+            address=user.get('address', None),
+            linkedin=user.get('linkedin', None),
+            github=user.get('github', None),
+            success=True,
+            message=res,
+            error=None
+        )
+    except Exception as e:
+        return ProfileSchema(
+            docId="",
+            userId="",
+            name="",
+            email="",
+            bio=None,
+            phone=None,
+            address=None,
+            linkedin=None,
+            github=None,
+            success=False,
+            message="Profile creation failed",
+            error=str(e)
         )
 
-        response.set_cookie(
-            key="access_token",
-            value=jwt['jwt'],
-            httponly=True,
-            secure=False,
-            samesite='lax',
-            max_age=7200
-        )
-        
-        userinfo = {
-            "userid": user_session['userId'],
-            "email": user_session['providerUid'],
-            "session_id": user_session['secret']
-            # "created_at": user_session['createdAt'],
-        }
-        
-        return AuthResponse(
-            success=True,
-            message="You logged in successfully",
-            userInfo=dict(user_session),
-            error=None,
-        )
-        
+
+@router.get('/profile/get')
+def get_resume(current_user = Depends(authenticate_user)):
+    try:
+        existing = check_profile_exists(current_user['userId'])
+
+        if existing[0] == False:
+            raise HTTPException(status_code=404, detail="Profile not found")
+
+        user = get_user_profile(current_user['userId'])
+
+        return user
     except Exception as e:
-        return AuthResponse(
-            success=False,
-            message="Login failed",
-            error=str(e),
-            userInfo=None
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get('/verify')
 def verify_email(userId: str, secret: str, account: Account = Depends(get_account)):
@@ -100,30 +172,32 @@ def verify_email(userId: str, secret: str, account: Account = Depends(get_accoun
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.post('/logout', response_model=AuthResponse)
-def logout(response: Response, account: Account = Depends(get_account)):
+def logout(response: Response, request: Request, account: Account = Depends(get_account)):
     try:
-        account.delete_sessions(
-            session_id="current"
+        cookies = request.cookies
+        print("Cookies received:", cookies)
+
+        access_token = cookies.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=401, detail="No access token found")
+
+        response.delete_cookie(
+            key="access_token",
+            httponly=True,
+            secure=False,
+            samesite="lax"
         )
-        
-        # response.delete_cookie(
-        #     key="access_token",
-        #     httponly=True,
-        #     secure=True
-        # )
 
-        return {
-            "success": True,
-            "message": "You logged out successfully",
-            "error": None,
-            "userInfo": None       
-        }
+        return AuthResponse(
+            success=True,
+            message="You logged out successfully",
+            error=None,
+            userInfo=None
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to Logout")
-
-@router.get("/debug-client")
-def debug_client():
-    client = get_account()
-    return {
-        "endpoint": client
-    }
+        return AuthResponse(
+            success=False,  
+            message="Logout failed",
+            error=str(e),
+            userInfo=None
+        )   

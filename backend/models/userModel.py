@@ -1,9 +1,11 @@
 from fastapi import HTTPException
 from core.appwrite import database
+from appwrite.query import Query
 from appwrite.services.databases import Databases
 from typing import Dict
 from appwrite.permission import Permission
 from appwrite.role import Role
+from core.config import settings 
 
 def create_user_collection(db_id: str):
     try:
@@ -21,13 +23,12 @@ def create_user_collection(db_id: str):
         collection_id = result["$id"]
 
         db.create_string_attribute(db_id, collection_id, "name", 100, required=True)
+        db.create_string_attribute(db_id, collection_id, "user_id", 100, required=True)
         db.create_email_attribute(db_id, collection_id, "email", required=True)
-        db.create_string_attribute(db_id, collection_id, "password", 255, required=True)
         db.create_string_attribute(db_id, collection_id, "bio", 3000, required=False)
         db.create_string_attribute(db_id, collection_id, "number", 35, required=False)
         db.create_string_attribute(db_id, collection_id, "linkedin", 250, required=False)
         db.create_string_attribute(db_id, collection_id, "github", 250, required=False)
-        db.create_string_attribute(db_id, collection_id, "profilePicture", 250, required=False)
         db.create_string_attribute(db_id, collection_id, "role", 50, required=False, default="user")
 
         education = db.create_collection(db_id, "unique()", "education", permissions=[], document_security=True)
@@ -103,10 +104,17 @@ def create_user_collection(db_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
+    
+def init_user_collection():
+    from core.config import settings
+    create_user_collection(settings.APPWRITE_DATABASE_ID)
 
 
 def create_user(userData: Dict, db_id: str, collection_id: str, userId: str):
     try:
+        if not userId:
+            raise ValueError("User ID is required to create document")
+        
         db = database()
         user = db.create_document(
             database_id=db_id,
@@ -119,23 +127,60 @@ def create_user(userData: Dict, db_id: str, collection_id: str, userId: str):
                 Permission.delete(Role.user(userId))
             ]
         )
+        
         return user
     except Exception as e:
-        print(str(e) or "Error occurred while creating user")
+        print("Error occurred while creating user:", str(e))
         return None
 
-def get_user(doc_id: str, db_id: str, collection_id: str):
+def get_user_profile(user_id: str):
     try:
         db = database()
-        user = db.get_document(
-            database_id = db_id,
-            collection_id = collection_id,
-            document_id = doc_id,
-                queries = []
-        )
+        profile = db.list_documents(
+            database_id=settings.APPWRITE_DATABASE_ID,
+            collection_id=settings.APPWRITE_USER_COLLECTION_ID,
+            queries=[Query.equal("user_id", user_id)]
+        )["documents"]
+
+        education = db.list_documents(
+            database_id=settings.APPWRITE_DATABASE_ID,
+            collection_id=settings.APPWRITE_EDUCATION_COLLECTION_ID,
+            queries=[Query.equal("user_id", user_id)]
+        )["documents"]
+
+        experience = db.list_documents(
+            database_id=settings.APPWRITE_DATABASE_ID,
+            collection_id=settings.APPWRITE_EXPERIENCE_COLLECTION_ID,
+            queries=[Query.equal("user_id", user_id)]
+        )["documents"]
+
+        skills = db.list_documents(
+            database_id=settings.APPWRITE_DATABASE_ID,
+            collection_id=settings.APPWRITE_SKILLS_COLLECTION_ID,
+            queries=[Query.equal("user_id", user_id)]
+        )["documents"]
+
+        resume = db.list_documents(
+            database_id=settings.APPWRITE_DATABASE_ID,
+            collection_id=settings.APPWRITE_RESUME_COLLECTION_ID,
+            queries=[Query.equal("user_id", user_id)]
+        )["documents"]
+
+        projects = db.list_documents(
+            database_id=settings.APPWRITE_DATABASE_ID,
+            collection_id=settings.APPWRITE_PROJECT_COLLECTION_ID,
+            queries=[Query.equal("user_id", user_id)]
+        )["documents"]
+
+        return {
+            "profile": profile[0] if profile else None,
+            "education": education,
+            "experience": experience,
+            "skills": skills,
+            "resume": resume,
+            "projects": projects
+        }
             
-        return user
-    
     except Exception as e:
         print(str(e) or "Error occurred while fetching user")
         return None

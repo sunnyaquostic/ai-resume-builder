@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from typing import List, Optional
 from datetime import date, datetime
 
 class ProfileSchema(BaseModel):
@@ -8,7 +7,6 @@ class ProfileSchema(BaseModel):
     name: str
     email: str
     bio: Optional[str] = None
-    profilePicture: Optional[str] = None
     phone: Optional[str] = Field(None, min_length=6, max_length=24)
     address: Optional[str] = None
     linkedin: Optional[str] = None
@@ -65,3 +63,15 @@ class Certification(BaseModel):
     date: date
     credentialId: Optional[str]
     link: Optional[str]
+    
+class ResumeInputSchema(BaseModel):
+    userId: str
+    title: str
+    template: str
+    basics: ProfileSchema
+    education: List[EducationSchema]
+    experience: List[Experience]
+    projects: List[Project]
+    skills: List[Skill]
+    certifications: List[Certification]
+    

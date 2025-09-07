@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     APPWRITE_ENDPOINT: str
     APPWRITE_API_KEY: str
     APPWRITE_DATABASE_ID: str
+    APPWRITE_RESUME_COLLECTION_ID:str 
+    APPWRITE_EDUCATION_COLLECTION_ID:str
+    APPWRITE_PROJECT_COLLECTION_ID:str
+    APPWRITE_SKILLS_COLLECTION_ID:str
+    APPWRITE_EXPERIENCE_COLLECTION_ID:str
+    APPWRITE_USER_COLLECTION_ID:str
+    
+    SECRET_KEY: str 
+    ALGORITHM: str
 
     def __init__(self, **values):
         super().__init__(**values)
