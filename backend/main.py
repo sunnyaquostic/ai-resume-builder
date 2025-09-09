@@ -8,11 +8,11 @@ from models.userModel import init_user_collection
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
 #     init_user_collection()
-#     print("✅ User collection initialized at startup")
+#     print("User collection initialized at startup")
     
 #     yield
     
-#     print("👋 App shutting down...")
+#     print(App shutting down...")
 
 app = FastAPI(
     # lifespan=lifespan,
@@ -32,7 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(user.router, prefix=settings.API_PREFIX)
-# app.include_router(services.router, prefix=settings.API_PREFIX)
+app.include_router(services.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

@@ -24,24 +24,23 @@ RESUME_PROMPT= """
 
 
     Sample of Input
-    {
-        "userId": "USER_DOC_ID_FROM_APPWRITE",
+    {{
         "title": "Frontend Developer Resume",
         "template": "modern-3",
         
-        "basics": {
+        "basics": {{
             "name": "John Doe",
             "email": "john.doe@gmail.com",
             "phone": "+123456789",
             "linkedin": "https://linkedin.com/in/johndoe",
             "github": "https://github.com/johndoe"
-        },
+        }},
         
         "rawExperience": "Worked 2 years as frontend developer at TechCorp, built React apps, improved performance, collaborated with backend team.",
         "rawEducation": "Studied Computer Science at ABC University from 2017 to 2021 with 3.7 GPA.",
         "rawSkills": "React, TypeScript, Node.js, Tailwind, SQL, AWS.",
         "rawProjects": "AI Resume Builder project, Next.js + FastAPI + Appwrite, deployed on Vercel."
-    }
+    }}
     
     - If template = "modern-1", generate a short, minimal resume.
     - If template = "modern-2", generate a detailed professional resume.

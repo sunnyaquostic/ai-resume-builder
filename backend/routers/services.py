@@ -1,68 +1,131 @@
-from fastapi import APIRouter, Depends
-import uuid
-from core.config import settings
-from schema.resumeSchema import ResumeInputSchema, ProfileSchema
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
+from schema.resumeSchema import ResumeInputSchema, ResumeOutputSchema
 from core.resume_generator import ResumeGenerator
-from core.appwrite import get_session
+from models.userModel import get_user_profile
+from typing import Dict
 from api.auth import authenticate_user
+from models.resumeModel import create_resume, get_curricullum_vitae, get_single_curricullum_vitae, delete_cv, create_cv_collection
+from core.config import settings 
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from docx import Document
+import os, uuid
+import io
+from fastapi.responses import StreamingResponse
 
-router = APIRouter(
+router = APIRouter( 
     prefix='/v1',
     tags=['users']
 ) 
+@router.post('/resume/create', response_model=ResumeOutputSchema)
+def generate_resume(data: ResumeInputSchema, current_user: Dict = Depends(authenticate_user)):
+    user = get_user_profile(current_user['userId'])
+    user_info = user['profile']
 
-@router.post('/createresume')
-def create_resume(data: ResumeInputSchema):
-
-    user_data = {
-        "userId": "12345",
-        "title": "Frontend Developer Resume",
-        "template": "modern-3",
+    input_data = data.model_dump()
+    input_data.update({
         "basics": {
-            "name": "John Doe",
-            "email": "john.doe@gmail.com",
-            "phone": "+123456789",
-            "linkedin": "https://linkedin.com/in/johndoe",
-            "github": "https://github.com/johndoe",
-        },
-        "rawExperience": "Worked 2 years as frontend developer at TechCorp, built React apps, improved performance, collaborated with backend team.",
-        "rawEducation": "Studied Computer Science at ABC University from 2017 to 2021 with 3.7 GPA.",
-        "rawSkills": "React, TypeScript, Node.js, Tailwind, SQL, AWS.",
-        "rawProjects": "AI Resume Builder project, Next.js + FastAPI + Appwrite, deployed on Vercel.",
-    }
+            "name": user_info["name"],
+            "email": user_info["email"],
+            "phone": user_info["phone"],
+            "github": user_info["github"],
+        }
+    })
+    
+    if user_info['linkedin']:
+        input_data['basics']['linkedin'] = user_info['linkedin']
+        
+    if user_info['github']:
+        input_data['basics']['github'] = user_info['github']
 
-    resume = ResumeGenerator.generate_resume(user_data)
-    print(resume)
+    resume = ResumeGenerator.generate_resume(input_data)
+    resume['user_id'] = current_user['userId']
+    
+    if resume and resume['error'] != '':
+        return ResumeOutputSchema(**resume)
+    
+    # insert into collection_id
+    create_resume(resume, settings.APPWRITE_DATABASE_ID, settings.APPWRITE_CV_COLLECTION_ID, current_user['userId'])
+    
+    return ResumeOutputSchema(**resume)
 
-    return {"resume": resume}
+@router.get('/resumes')
+def get_resumes(user: Dict = Depends(authenticate_user)):
+    all_resumes = get_curricullum_vitae(user['user_id'])
+    
+    if all_resumes is None:
+        return {"success": False, "message": "Could not find resumes"}
+    
+    if all_resumes['error']:
+        return {"success": False, "message": all_resumes['error']}
+    
+    if len(all_resumes) > 0:
+        return {"success": True, "data": all_resumes}
 
-@router.get('/resuming/{id}')
-def get_single_resume(id):
-    pass
+    
+@router.get('/resume/get/{id}')
+def get_single_resume(id:str, user: Dict = Depends(authenticate_user)) ->dict:
+    cv = get_single_curricullum_vitae(user_id=user['user_id'], cv_id=id)
+    
+    if cv['error'] != '':
+        return {"success": False, "message": cv['error']}
+    
+    if len(cv) == 0:
+        return {"success": False, "message": "No record found"}
 
-
-@router.put('/resuming/update/{id}')
-def update_resume(id):
-    pass
+    return cv 
 
 @router.delete('/resuming/delete/{id}')
 def delete_resume(id):
-    pass
+    res = delete_cv(settings.APPWRITE_DATABASE_ID, settings.APPWRITE_CV_COLLECTION_ID, id)
+    
+    return res
 
-@router.post('/resumes/{id}/ai/generate')
-def generate_section_ai(id):
-    pass
+@router.get("/resume/pdf/{resume_id}")
+def download_resume_pdf(resume_id: str, user: Dict = Depends(authenticate_user)):
+    resume_doc = get_single_curricullum_vitae(user['userId'], resume_id)
 
-@router.put('/resumes/{id}/ai/improve')
-def improve_section_ai(id):
-    pass
+    if not resume_doc:
+        raise HTTPException(status_code=404, detail="Resume not found")
 
-@router.get('/resumes/{id}/pdf')
-def generate_pdf(id):
-    pass
+    resume_text = resume_doc.get("resume", "")
 
-@router.get('/resumes/{id}/docx ')
-def generate_word(id):
-    pass
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
 
+    text_object = c.beginText(40, height - 50)
+    for line in resume_text.split("\n"):
+        text_object.textLine(line)
+    c.drawText(text_object)
+    c.save()
+
+    buffer.seek(0)
+    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=resume.pdf"})
+
+
+
+@router.get("/resume/word/{resume_id}")
+def download_resume_word(resume_id: str, user: Dict = Depends(authenticate_user)):
+    resume_doc = get_single_curricullum_vitae(user['userId'], resume_id)
+
+    if not resume_doc:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    resume_text = resume_doc.get("resume", "")
+
+    buffer = io.BytesIO()
+    doc = Document()
+    for line in resume_text.split("\n"):
+        if line.strip():
+            doc.add_paragraph(line)
+    doc.save(buffer)
+
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename=resume_{uuid.uuid4().hex}.docx"}
+    )
 

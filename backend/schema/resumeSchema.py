@@ -65,13 +65,29 @@ class Certification(BaseModel):
     link: Optional[str]
     
 class ResumeInputSchema(BaseModel):
-    userId: str
     title: str
-    template: str
-    basics: ProfileSchema
-    education: List[EducationSchema]
-    experience: List[Experience]
-    projects: List[Project]
-    skills: List[Skill]
-    certifications: List[Certification]
+    template: str = Field(..., pattern="^(modern-1|modern-2|modern-3)$")
+    education: str
+    experience: str
+    projects: str
+    skills: str
+    certifications: Optional[str]
+    
+class ResumeOutputSchema(BaseModel):
+    title: Optional[str] = ''
+    name: Optional[str] = ''
+    email: Optional[str] = ''
+    phone: Optional[str] = ''
+    linkedin: Optional[str] = ''
+    github: Optional[str] = ''
+    professionalsummary: Optional[str] = ''
+    skills: Optional[str] = ''
+    workexperience: Optional[str] = ''
+    projects: Optional[str] = ''
+    education: Optional[str] = ''
+    certifications: Optional[str|None] = None
+    error: Optional[str] = ''
+    user_id: str
+
+
     

@@ -29,14 +29,14 @@ def authenticate_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
-        print("Authenticated user:", user['$id'])
+
         return {
             "userId": user["$id"],
             "name": user.get("name"),
             "email": user.get("email"),
             "secret": user.get("secret")
         }
-    
+     
     except Exception as e:
         print(e)
         raise HTTPException(
