@@ -89,5 +89,4 @@ class ResumeOutputSchema(BaseModel):
     error: Optional[str] = ''
     user_id: str
 
-
     
