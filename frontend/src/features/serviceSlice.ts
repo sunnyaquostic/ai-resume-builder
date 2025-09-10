@@ -191,9 +191,40 @@ const resumeSlice = createSlice({
             state.loading = false;
             state.error = "Something went wrong with fetching single id"
         })
+
+        builder.addCase(DeleteResume.pending, (state) => {
+            state.loading = false;
+            state.error = null;
+        })
+        .addCase(DeleteResume.fulfilled, (state, action) => {
+            state.loading = true;
+            state.error = null;
+            state.success = true;
+            state.message = action.payload?.message || "Document deleted successfully";
+            state.resumeInfo = action.payload?.resumeInfo || null
+        })
+        .addCase(DeleteResume.rejected, (state) => {
+            state.loading = false;
+            state.error = "An error occured deleting the document"
+        })
+
+        builder.addCase(resumePdf.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(resumePdf.fulfilled, (state, action) => {
+            state.loading = false;
+            state.success = true
+            state.error = null;
+            state.message = 'Pdf generated successfully!';
+            state.resumeInfo = action.payload
+        })
+        .addCase(resumePdf.rejected, (state) => {
+            state.loading = false;
+            state.error = "An Error occured generating the pdf"
+        })
     }
 })
-
 
 export const { removeErrors, removeSuccess } = resumeSlice.actions;
 export default resumeSlice.reducer;

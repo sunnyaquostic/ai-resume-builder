@@ -5,10 +5,11 @@ import type {
     UserInfo, 
     AuthState, 
     LoginData,
-    UserProfile
+    UserProfile,
+    AuthResponse
 } from "../types/userTypes";
 
-export const registerUser = createAsyncThunk<UserInfo, UserData, { rejectValue: string }>(
+export const registerUser = createAsyncThunk<AuthResponse, UserData, { rejectValue: string }>(
   "user/create",
   async (userData, { rejectWithValue }) => {
     try {
@@ -16,7 +17,7 @@ export const registerUser = createAsyncThunk<UserInfo, UserData, { rejectValue: 
         headers: { "Content-Type": "application/json" }
       };
 
-      const { data } = await axios.post<UserInfo>("/api/v1/signup", userData, config);
+      const { data } = await axios.post<AuthResponse>("/api/v1/signup", userData, config);
       return data;
     } catch (err) {
       console.error(err);
@@ -117,16 +118,19 @@ const userSlice = createSlice({
     builder.addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
         state.isAuthenticated = true;
-        state.userInfo = action.payload;
+        state.userInfo = action.payload.userInfo ?? null;
+        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Something went wrong";
+        state.error = action.payload ?? "Something went wrong";
+        state.success = false;
       });
 
       builder.addCase(LoginUser.pending, (state) => {
@@ -144,7 +148,7 @@ const userSlice = createSlice({
         localStorage.setItem('user', JSON.stringify(state.userInfo))
         localStorage.setItem('isAuthenticated', JSON.stringify(Boolean(state.userInfo)))  
       })
-      .addCase(LoginUser.pending, (state, action) => {
+      .addCase(LoginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.message = "Error Occured while login";

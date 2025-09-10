@@ -12,7 +12,7 @@ export interface UserProfile extends GeneralInfo {
   github?: string;
   success?: boolean;
   message?: string;
-  error?: string | Record<string, any> | null;
+  error?: string 
 }
 
 export interface UserData extends GeneralInfo {
