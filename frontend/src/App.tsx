@@ -12,9 +12,9 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 
 const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route>
-      <Route path="/" element={<Home />} />
+  createRoutesFromElements([
+    <Route path='/'>
+      <Route index element={<Home />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route
@@ -32,10 +32,10 @@ const router = createBrowserRouter(
             <ProfileCreate />
           </ProtectedRoute>
         }
-      />
+      /> 
       <Route path="*" element={<div>Not Found</div>} />
     </Route>
-  )
+  ])
 )
 
 function App() {

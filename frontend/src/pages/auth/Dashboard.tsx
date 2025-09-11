@@ -7,13 +7,11 @@ function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside
         className={`${
           isOpen ? "w-64" : "w-20"
         } bg-blue-500 text-white transition-all duration-300 flex flex-col`}
       >
-        {/* Logo + Toggle */}
         <div className="flex items-center justify-between p-4 border-b border-blue-400">
           <span className="text-lg font-bold">{isOpen ? "My Dashboard" : "MD"}</span>
           <Button
