@@ -69,85 +69,103 @@ function Register() {
       {loading 
         ? <Loader />
         : 
-            <main className="w-full min-h-[100vh] h-auto bg-blue-500 flex items-center justify-center sm:py-12 p-6">
-            <form 
-              onSubmit={handleSubmit}
-              className="w-full sm:w-[900px] sm:max-w-[1000px]: bg-white rounded-lg sm:py-6 sm:px-8 p-4 flex flex-col gap-5"
-            >
-              <h3 className="text-[1.8rem] font-[700] text-gray-900 text-center">
-                Sign Up
-              </h3>
-              <div className="flex items-center justify-between gap-4 w-full mt-5 sm:flex-row flex-col">
-                <input
-                  type="text"
-                  placeholder="Full name"
-                  name='name'
-                  value={name}
-                  onChange={handleChange}
-                  className="py-3 px-4 border focus:outline-blue-500 border-gray-300  rounded-lg w-full"
-                />
+            <main className="w-full min-h-[100vh] h-auto bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center sm:py-12 p-6">
+            <div className="w-full max-w-md">
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">AR</span>
+                  </div>
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
+                <p className="text-gray-600">Join thousands of professionals building better resumes</p>
               </div>
+              
+              <form 
+                onSubmit={handleSubmit}
+                className="bg-white rounded-xl shadow-lg p-8 space-y-6"
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      placeholder="Enter your full name"
+                      name='name'
+                      value={name}
+                      onChange={handleChange}
+                      className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between gap-4 w-full sm:flex-row flex-col">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  name='email'
-                  value={email}
-                  onChange={handleChange}
-                  className="py-3 px-4 border focus:outline-blue-500 border-gray-300  rounded-lg w-full"
-                />
-              </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      placeholder="Enter your email"
+                      name='email'
+                      value={email}
+                      onChange={handleChange}
+                      className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between gap-4 w-full sm:flex-row flex-col">
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  name='password'
-                  value={password}
-                  onChange={handleChange}
-                  className="py-3 px-4 border focus:outline-blue-500 border-gray-300  rounded-lg w-full"
-                />
-              </div>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      placeholder="Create a password"
+                      name='password'
+                      value={password}
+                      onChange={handleChange}
+                      className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between gap-4 w-full sm:flex-row flex-col">
-                <input
-                  type="password"
-                  placeholder="confirm password"
-                  name='confirmPassword'
-                  value={confirmPassword}
-                  onChange={handleChange}
-                  className="py-3 px-4 border focus:outline-blue-500 border-gray-300  rounded-lg w-full"
-                />
-              </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      placeholder="Confirm your password"
+                      name='confirmPassword'
+                      value={confirmPassword}
+                      onChange={handleChange}
+                      className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    />
+                  </div>
+                </div>
 
-              <div className="w-full flex items-center justify-center">
                 <button
                   type="submit"
-                  className="w-full sm:w-[50%] py-3 px-4 bg-blue-500 text-white border-none outline-none rounded-lg mt-3">
-                  {loading ? 'Processing...' : 'Register'}
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
-              </div>
 
-              <div className="flex items-center justify-center w-full gap-1">
-                <span className="text-[1rem] text-gray-600 font-[500]">
-                  have already an account?{" "}
-                </span>
-                <span>
+                <div className="text-center">
+                  <span className="text-gray-600">
+                    Already have an account?{" "}
+                  </span>
                   <Link
-                    to={"/signin"}
-                    className="text-[1rem] text-blue-500 font-[500]">
-                    Signin
+                    to={"/login"}
+                    className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                    Sign in here
                   </Link>
-                </span>
-              </div>
-
-              <div className="w-full my-1 flex items-center justify-center gap-3">
-                <hr className="w-[45%] bg-gray-400 h-[2px]" />
-                <p>or</p>
-                <hr className="w-[45%] bg-gray-400 h-[2px]" />
-              </div>
-            </form>
+                </div>
+              </form>
+            </div>
           </main>
       }
     </>

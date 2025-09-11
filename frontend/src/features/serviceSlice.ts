@@ -32,7 +32,7 @@ export const getResume = createAsyncThunk<ResumeResponse, void, {rejectValue: st
                 }
             }
 
-            const { data } = await axios.get<ResumeResponse>('/resume/get', config)
+            const { data } = await axios.get<ResumeResponse>('/resumes', config)
             return data
          } catch (err) {
             console.log("error while retriving resuming: ", err);
@@ -72,7 +72,7 @@ export const DeleteResume = createAsyncThunk<ResumeResponse, string, {rejectValu
                 }
             }
 
-            const { data } = await axios.delete<ResumeResponse>(`/resume/delete/${resume_id}`, config)
+            const { data } = await axios.delete<ResumeResponse>(`/resuming/delete/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not find a cv with id: ${resume_id}: ", err);
@@ -108,15 +108,15 @@ export const resumeWord = createAsyncThunk<UrlLink, string, {rejectValue: string
         try {
             const config = {
                 headers: {
-                    "Content-Type": "application/docx"
+                    "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 }
             }
 
-            const { data } = await axios.get<UrlLink>(`/resume/pdf/${resume_id}`, config)
+            const { data } = await axios.get<UrlLink>(`/resume/word/${resume_id}`, config)
             return data
          } catch (err) {
-            console.log("Could not generate the pdf: ", err);
-            return rejectWithValue(String(err) || `Could not generate the pdf for doc with id: ${resume_id}`)
+            console.log("Could not generate the word document: ", err);
+            return rejectWithValue(String(err) || `Could not generate the word document for doc with id: ${resume_id}`)
             
         }
     }
