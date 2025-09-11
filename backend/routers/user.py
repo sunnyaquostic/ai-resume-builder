@@ -21,7 +21,7 @@ def register(user_data: CreateUserSchema, account: Account = Depends(get_account
     name = user_data.name
     email = user_data.email
     password = user_data.password
-    confirm_password = user_data.confirm_password
+    confirm_password = user_data.confirmPassword
 
     if password != confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")

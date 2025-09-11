@@ -5,7 +5,7 @@ class CreateUserSchema(BaseModel):
     email: str
     name: str = Field(..., min_length=2, max_length=100)
     password: str = Field(..., min_length=8)
-    confirm_password: str = Field(..., min_length=8)
+    confirmPassword: str = Field(..., min_length=8)
     # phone_number: str = Field(..., min_length=6, max_length=24)
     
 class AuthResponse(BaseModel):

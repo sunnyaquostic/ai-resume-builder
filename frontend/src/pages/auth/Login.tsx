@@ -11,7 +11,7 @@ import Loader from '@/components/Loader';
 function Login() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { loading, success, error } = useSelector((state: RootState) => state.user)
+  const { loading, loginStatus, error } = useSelector((state: RootState) => state.user)
   const [userData, setUserData] = useState({
       email: '',
       password: ''
@@ -38,12 +38,15 @@ function Login() {
   },[dispatch, error])
 
   useEffect(() => {
-    if (success) {
-        toast.success('Registration Successful', {position:'top-center', autoClose:3000})
-        dispatch(removeSuccess())
-        navigate('/login')
+    if (loginStatus === "succeeded") {
+      toast.success("Login Successful", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      dispatch(removeSuccess());
+      navigate("/dashboard"); // redirect after login
     }
-  }, [dispatch, success])
+  }, [loginStatus, dispatch, navigate]);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()

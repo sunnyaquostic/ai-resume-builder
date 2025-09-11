@@ -10,7 +10,7 @@ import Loader from '@/components/Loader';
 function Register() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { loading, success, error } = useSelector((state: RootState) => state.user)
+  const { loading, registerStatus, error, message } = useSelector((state: RootState) => state.user)
   const [userData, setUserData] = useState({
       name: '',
       email: '',
@@ -40,13 +40,14 @@ function Register() {
     }
   },[dispatch, error])
 
+
   useEffect(() => {
-    if (success) {
-        toast.success('Registration Successful', {position:'top-center', autoClose:3000})
-        dispatch(removeSuccess())
-        navigate('/login')
+    if (registerStatus === "succeeded") {
+      toast.success(message || "Registration Successful", {position: 'top-center', autoClose: 3000});
+      dispatch(removeSuccess());
+      navigate("/login");
     }
-  }, [dispatch, success])
+  }, [registerStatus, dispatch, navigate]);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -111,6 +112,7 @@ function Register() {
                       placeholder="Enter your email"
                       name='email'
                       value={email}
+                      autoComplete='name'
                       onChange={handleChange}
                       className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
@@ -127,6 +129,7 @@ function Register() {
                       name='password'
                       value={password}
                       onChange={handleChange}
+                      autoComplete='new-password'
                       className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
                   </div>
@@ -141,6 +144,7 @@ function Register() {
                       placeholder="Confirm your password"
                       name='confirmPassword'
                       value={confirmPassword}
+                      autoComplete='new-password'
                       onChange={handleChange}
                       className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
