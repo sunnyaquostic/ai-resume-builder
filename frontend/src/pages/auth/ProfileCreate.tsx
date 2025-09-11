@@ -2,17 +2,17 @@ import { FormEvent, useEffect, useState, type ChangeEvent } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
-import { User, Mail, Phone, MapPin, Linkedin, Github, FileText, ArrowLeft } from 'lucide-react';
+import { User, Phone, MapPin, Linkedin, Github, FileText, ArrowLeft } from 'lucide-react';
 import type { RootState, AppDispatch } from '../../app/store';
 import { removeErrors, removeSuccess } from '@/features/serviceSlice';
-import { ProfileSetUp, GetProfile } from '../../features/userSlice';
+import { ProfileSetUp } from '../../features/userSlice';
 import Loader from '@/components/Loader';
 import { Button } from '@/components/ui/button';
 
 function ProfileCreate() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { loading, success, error, userInfo } = useSelector((state: RootState) => state.user)
+  const { loading, success, error, userInfo, message } = useSelector((state: RootState) => state.user)
   const [userProfile, setUserProfile] = useState({
       name: '',
       email: '',
@@ -65,11 +65,11 @@ function ProfileCreate() {
 
   useEffect(() => {
     if (success) {
-        toast.success('Profile Updated Successfully', {position:'top-center', autoClose:3000})
-        dispatch(removeSuccess())
-        navigate('/dashboard')
+      toast.success(message || 'Profile saved successfully', {position:'top-center', autoClose:3000})
+      dispatch(removeSuccess())
+      navigate('/dashboard')
     }
-  }, [dispatch, success])
+  }, [dispatch, success, message, navigate])
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -93,8 +93,8 @@ function ProfileCreate() {
       {loading 
         ? <Loader />
         : 
-            <main className="w-full min-h-[100vh] h-auto bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center sm:py-12 p-6">
-            <div className="w-full max-w-4xl">
+            <main className="w-full min-h-[100vh] h-auto bg-gradient-to-br from-blue-50 to-indigo-100 py-12 p-6">
+            <div className="max-w-4xl mx-auto">
               {/* Header */}
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center mb-4">

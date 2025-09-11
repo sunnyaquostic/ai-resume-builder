@@ -2,6 +2,9 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import axios from 'axios'
 import type { ResumeResponse, RequestForm, UrlLink } from '../types/serviceTypes'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 export const createResume = createAsyncThunk<ResumeResponse, RequestForm, {rejectValue: string}>(
     "resume/create",
     async (RequestForm, {rejectWithValue}) => {
@@ -12,7 +15,7 @@ export const createResume = createAsyncThunk<ResumeResponse, RequestForm, {rejec
                 }
             }
 
-            const { data } = await axios.post<ResumeResponse>('/resume/create', RequestForm, config)
+            const { data } = await axios.post<ResumeResponse>(`${API_BASE_URL}/resume/create`, RequestForm, config)
             return data
          } catch (err) {
             console.log("error while creating the resuming: ", err);
@@ -32,7 +35,7 @@ export const getResume = createAsyncThunk<ResumeResponse, void, {rejectValue: st
                 }
             }
 
-            const { data } = await axios.get<ResumeResponse>('/resumes', config)
+            const { data } = await axios.get<ResumeResponse>('/api/v1/resumes', config)
             return data
          } catch (err) {
             console.log("error while retriving resuming: ", err);
@@ -52,7 +55,7 @@ export const getSingleResume = createAsyncThunk<ResumeResponse, string, {rejectV
                 }
             }
 
-            const { data } = await axios.get<ResumeResponse>(`/resume/get/${resume_id}`, config)
+            const { data } = await axios.get<ResumeResponse>(`/api/v1/resume/get/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not find a cv with id: ${resume_id}: ", err);
@@ -72,7 +75,7 @@ export const DeleteResume = createAsyncThunk<ResumeResponse, string, {rejectValu
                 }
             }
 
-            const { data } = await axios.delete<ResumeResponse>(`/resuming/delete/${resume_id}`, config)
+            const { data } = await axios.delete<ResumeResponse>(`/api/v1/resuming/delete/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not find a cv with id: ${resume_id}: ", err);
@@ -92,7 +95,7 @@ export const resumePdf = createAsyncThunk<UrlLink, string, {rejectValue: string}
                 }
             }
 
-            const { data } = await axios.get<UrlLink>(`/resume/pdf/${resume_id}`, config)
+            const { data } = await axios.get<UrlLink>(`/api/v1/resume/pdf/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not generate the pdf: ", err);
@@ -112,7 +115,7 @@ export const resumeWord = createAsyncThunk<UrlLink, string, {rejectValue: string
                 }
             }
 
-            const { data } = await axios.get<UrlLink>(`/resume/word/${resume_id}`, config)
+            const { data } = await axios.get<UrlLink>(`/api/v1/resume/word/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not generate the word document: ", err);

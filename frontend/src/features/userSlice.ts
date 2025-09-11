@@ -9,6 +9,8 @@ import type {
     AuthResponse
 } from "../types/userTypes";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const registerUser = createAsyncThunk<AuthResponse, UserData, { rejectValue: string }>(
   "user/create",
   async (userData, { rejectWithValue }) => {
@@ -17,7 +19,7 @@ export const registerUser = createAsyncThunk<AuthResponse, UserData, { rejectVal
         headers: { "Content-Type": "application/json" }
       };
 
-      const { data } = await axios.post<AuthResponse>("/api/v1/signup", userData, config);
+      const { data } = await axios.post<AuthResponse>(`${API_BASE_URL}/register`, userData, config);
       return data;
     } catch (err) {
       console.error(err);
@@ -34,7 +36,7 @@ export const LoginUser = createAsyncThunk<UserInfo, LoginData, {rejectValue: str
                 headers: {"Content-Type": "application/json"}
             }
 
-            const { data } = await axios.post<UserInfo>('/login', LoginData, config)
+            const { data } = await axios.post<UserInfo>('/api/v1/login', LoginData, config)
             return data
         } catch (err) {
             console.log('error while login...', err)
@@ -51,7 +53,7 @@ export const LogoutUser = createAsyncThunk<UserInfo, void, {rejectValue: string}
                 headers: {"Content-Type": "application/json"}
             }
 
-            const { data } = await axios.post<UserInfo>('/logout', config)
+            const { data } = await axios.post<UserInfo>('/api/v1/logout', config)
             return data
         } catch (err) {
             console.log('error while login...', err)
@@ -68,7 +70,7 @@ export const ProfileSetUp = createAsyncThunk<UserInfo, UserProfile, { rejectValu
                 headers: {'Content-Type': 'application/json'}
             }
 
-            const { data } = await axios.post<UserInfo>('/profile/create', UserProfile, config)
+            const { data } = await axios.post<UserInfo>('/api/v1/profile/create', UserProfile, config)
             return data
         } catch (error) {
             console.log("Profile Creation failed", error)
@@ -85,7 +87,7 @@ export const GetProfile = createAsyncThunk<UserInfo, void, { rejectValue: string
                 headers: {'Content-Type': 'application/json'}
             }
 
-            const { data } = await axios.get<UserInfo>('/profile/get', config)
+            const { data } = await axios.get<UserInfo>('/api/v1/profile/get', config)
             return data
         } catch (error) {
             console.log("Failed to read profile", error)

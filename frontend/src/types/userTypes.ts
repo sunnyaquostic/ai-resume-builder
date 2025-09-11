@@ -20,9 +20,20 @@ export interface UserData extends GeneralInfo {
   confirmPassword: string
 }
 
+// Backend profile response schema alignment
 export interface UserInfo extends GeneralInfo {
-  id: string
-  // add more fields if your backend returns them
+  // backend returns docId and userId; keep both optional to support auth payloads
+  docId?: string;
+  userId?: string;
+  role?: string;
+  bio?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  linkedin?: string | null;
+  github?: string | null;
+  success?: boolean;
+  message?: string;
+  error?: string | null;
 }
 
 export interface AuthResponse {
