@@ -91,6 +91,7 @@ function Login() {
                       placeholder="Enter your email"
                       name='email'
                       value={email}
+                      autoComplete='username'
                       onChange={handleChange}
                       className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
@@ -107,6 +108,7 @@ function Login() {
                       name='password'
                       value={password}
                       onChange={handleChange}
+                      autoComplete='new-password'
                       className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
                   </div>

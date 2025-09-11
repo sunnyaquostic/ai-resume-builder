@@ -196,13 +196,11 @@ const userSlice = createSlice({
       state.error = null;
       state.message = "Profile completed successfully";
       state.userInfo = action.payload;
-      state.isAuthenticated = Boolean(action.payload);
     });
     builder.addCase(ProfileSetUp.rejected, (state, action) => {
       state.profileStatus = "failed";
       state.loading = false;
       state.error = action.payload ?? "Failed to create profile";
-      state.isAuthenticated = false;
       state.message = "Failed to create profile";
     });
 

@@ -52,7 +52,7 @@ def generate_resume(data: ResumeInputSchema, current_user: Dict = Depends(authen
 
 @router.get('/resumes')
 def get_resumes(user: Dict = Depends(authenticate_user)):
-    all_resumes = get_curricullum_vitae(user['user_id'])
+    all_resumes = get_curricullum_vitae(user['userId'])
     
     if all_resumes is None:
         return {"success": False, "message": "Could not find resumes"}
