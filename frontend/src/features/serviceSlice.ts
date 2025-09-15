@@ -1,9 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import axios from 'axios'
-import type { ResumeResponse, RequestForm, UrlLink } from '../types/serviceTypes'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+import type { ResumeResponse, ResumeState, UrlLink, RequestForm } from '../types/serviceTypes'
+import api from '@/api'
 
 export const createResume = createAsyncThunk<ResumeResponse, RequestForm, {rejectValue: string}>(
     "resume/create",
@@ -15,7 +12,7 @@ export const createResume = createAsyncThunk<ResumeResponse, RequestForm, {rejec
                 }
             }
 
-            const { data } = await axios.post<ResumeResponse>(`${API_BASE_URL}/resume/create`, RequestForm, config)
+            const { data } = await api.post<ResumeResponse>('/v1/resume/create', RequestForm, config)
             return data
          } catch (err) {
             console.log("error while creating the resuming: ", err);
@@ -25,25 +22,23 @@ export const createResume = createAsyncThunk<ResumeResponse, RequestForm, {rejec
     }
 )
 
-export const getResume = createAsyncThunk<ResumeResponse, void, {rejectValue: string}>(
-    "resume/get",
-    async (_, {rejectWithValue}) => {
-        try {
-            const config = {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+export const getResume = createAsyncThunk<ResumeResponse, void, { rejectValue: string }>(
+  "resume/get",
+  async (_, { rejectWithValue }) => {
+    try {
+      const config = { headers: { "Content-Type": "application/json" } };
+      const { data } = await api.get<ResumeResponse>("/v1/resumes", config);
 
-            const { data } = await axios.get<ResumeResponse>('/api/v1/resumes', config)
-            return data
-         } catch (err) {
-            console.log("error while retriving resuming: ", err);
-            return rejectWithValue(String(err) || 'error occured while retriving resuming')
-            
-        }
+      console.log("API raw response:", data);
+      return data;
+    } catch (err) {
+      console.log("error while retrieving resumes: ", err);
+      return rejectWithValue(
+        String(err) || "error occurred while retrieving resumes"
+      );
     }
-)
+  }
+);
 
 export const getSingleResume = createAsyncThunk<ResumeResponse, string, {rejectValue: string}>(
     "resume/getsingle",
@@ -55,7 +50,7 @@ export const getSingleResume = createAsyncThunk<ResumeResponse, string, {rejectV
                 }
             }
 
-            const { data } = await axios.get<ResumeResponse>(`/api/v1/resume/get/${resume_id}`, config)
+            const { data } = await api.get<ResumeResponse>(`/v1/resume/get/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not find a cv with id: ${resume_id}: ", err);
@@ -65,25 +60,20 @@ export const getSingleResume = createAsyncThunk<ResumeResponse, string, {rejectV
     }
 )
 
-export const DeleteResume = createAsyncThunk<ResumeResponse, string, {rejectValue: string}>(
-    "resume/delete",
-    async (resume_id, {rejectWithValue}) => {
-        try {
-            const config = {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+export const DeleteResume = createAsyncThunk<
+  { success: boolean; message: string },
+  string,
+  { rejectValue: string }
+>("resume/delete", async (resumeId, { rejectWithValue }) => {
+  try {
+    const { data } = await api.delete(`/v1/resumes/${resumeId}`);
+    return data;
+  } catch (err) {
+    console.log(err)
+    return rejectWithValue("Failed to delete resume");
+  }
+});
 
-            const { data } = await axios.delete<ResumeResponse>(`/api/v1/resuming/delete/${resume_id}`, config)
-            return data
-         } catch (err) {
-            console.log("Could not find a cv with id: ${resume_id}: ", err);
-            return rejectWithValue(String(err) || `Could not find a cv with id: ${resume_id}`)
-            
-        }
-    }
-)
 
 export const resumePdf = createAsyncThunk<UrlLink, string, {rejectValue: string}>(
     "resume/pdf",
@@ -95,7 +85,7 @@ export const resumePdf = createAsyncThunk<UrlLink, string, {rejectValue: string}
                 }
             }
 
-            const { data } = await axios.get<UrlLink>(`/api/v1/resume/pdf/${resume_id}`, config)
+            const { data } = await api.get<UrlLink>(`/v1/resume/pdf/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not generate the pdf: ", err);
@@ -115,7 +105,7 @@ export const resumeWord = createAsyncThunk<UrlLink, string, {rejectValue: string
                 }
             }
 
-            const { data } = await axios.get<UrlLink>(`/api/v1/resume/word/${resume_id}`, config)
+            const { data } = await api.get<UrlLink>(`/v1/resume/word/${resume_id}`, config)
             return data
          } catch (err) {
             console.log("Could not generate the word document: ", err);
@@ -125,13 +115,13 @@ export const resumeWord = createAsyncThunk<UrlLink, string, {rejectValue: string
     }
 )
 
-const initialState: ResumeResponse =  {
-    success: false,
-    error: null,
-    message: '',
-    resumeInfo: null,
-    loading: false
-}
+const initialState: ResumeState = {
+  loading: false,
+  success: false,
+  message: "",
+  error: null,
+  resumeInfo: []
+};
 
 const resumeSlice = createSlice({
     name: "resume",
@@ -155,8 +145,7 @@ const resumeSlice = createSlice({
             state.loading = false;
             state.success = action.payload?.success
             state.error = null;
-            state.message = action.payload?.message || "Resume created successfully";
-            state.resumeInfo = action.payload.resumeInfo || null;
+            state.resumeInfo = action.payload.data || [];
         })
         .addCase(createResume.rejected, (state) => {
             state.loading = false;
@@ -165,67 +154,78 @@ const resumeSlice = createSlice({
 
         builder.addCase(getResume.pending, (state) => {
             state.loading = true;
-            state.error = null
+            state.error = null;
+            state.success = false;
         })
         .addCase(getResume.fulfilled, (state, action) => {
             state.loading = false;
-            state.success = true;
-            state.message = action.payload?.message || "All CV's fetched!"
-            state.resumeInfo = action.payload?.resumeInfo || null
-            state.error = null
+            state.success = action.payload.success;
+            state.resumeInfo = action.payload.data || [];
         })
-        .addCase(getResume.rejected, (state) => {
-            state.loading = false
-            state.error = 'Failed to fetch CV\'s'
-        })
+        .addCase(getResume.rejected, (state, action) => {
+            state.loading = false;
+            state.success = false;
+            state.error = action.payload || "Failed to fetch resumes";
+            state.resumeInfo = [];
+        });
 
         builder.addCase(getSingleResume.pending, (state) => {
             state.loading = true;
             state.error = null;
+            state.success = false;
         })
         .addCase(getSingleResume.fulfilled, (state, action) => {
             state.loading = false;
             state.success = true;
-            state.message = action.payload?.message || "Fetch cv ";
-            state.resumeInfo = action.payload?.resumeInfo || null
+            state.message = action.payload?.message || "Fetched resume successfully";
+            state.resumeInfo = action.payload?.data || null;
             state.error = null;
         })
-        .addCase(getSingleResume.rejected, (state) => {
+        .addCase(getSingleResume.rejected, (state, action) => {
             state.loading = false;
-            state.error = "Something went wrong with fetching single id"
+            state.success = false;
+            state.error = (action.payload as string) || "Something went wrong fetching the resume by ID";
         })
 
         builder.addCase(DeleteResume.pending, (state) => {
-            state.loading = false;
+            state.loading = true;
             state.error = null;
+            state.success = false;
         })
         .addCase(DeleteResume.fulfilled, (state, action) => {
-            state.loading = true;
-            state.error = null;
-            state.success = true;
-            state.message = action.payload?.message || "Document deleted successfully";
-            state.resumeInfo = action.payload?.resumeInfo || null
-        })
-        .addCase(DeleteResume.rejected, (state) => {
             state.loading = false;
-            state.error = "An error occured deleting the document"
+            state.success = true;
+            state.error = null;
+            state.message = action.payload?.message || "Document deleted successfully";
+            state.resumeInfo = [];
+        })
+        .addCase(DeleteResume.rejected, (state, action) => {
+            state.loading = false;
+            state.success = false;
+            state.error =
+            (action.payload as string) ||
+            "An error occurred deleting the document";
         })
 
-        builder.addCase(resumePdf.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        })
-        .addCase(resumePdf.fulfilled, (state, action) => {
-            state.loading = false;
-            state.success = true
-            state.error = null;
-            state.message = 'Pdf generated successfully!';
-            state.resumeInfo = action.payload
-        })
-        .addCase(resumePdf.rejected, (state) => {
-            state.loading = false;
-            state.error = "An Error occured generating the pdf"
-        })
+        // builder.addCase(resumePdf.pending, (state) => {
+        //     state.loading = true;
+        //     state.error = null;
+        //     state.success = false;
+        // })
+        // .addCase(resumePdf.fulfilled, (state, action) => {
+        //     state.loading = false;
+        //     state.success = true;
+        //     state.error = null;
+        //     state.message = "PDF generated successfully!";
+        //     state.resumeInfo = action.payload || null;
+        // })
+        // .addCase(resumePdf.rejected, (state, action) => {
+        //     state.loading = false;
+        //     state.success = false;
+        //     state.error =
+        //     (action.payload as string) ||
+        //     "An error occurred generating the PDF";
+        // });
     }
 })
 

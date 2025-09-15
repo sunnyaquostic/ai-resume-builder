@@ -20,9 +20,7 @@ export interface UserData extends GeneralInfo {
   confirmPassword: string
 }
 
-// Backend profile response schema alignment
 export interface UserInfo extends GeneralInfo {
-  // backend returns docId and userId; keep both optional to support auth payloads
   docId?: string;
   userId?: string;
   role?: string;
@@ -43,10 +41,22 @@ export interface AuthResponse {
   userInfo?: UserInfo | null
 }
 
-export interface AuthState extends AuthResponse {
-  loading: boolean
-  isAuthenticated: boolean
+export type RequestStatus = "idle" | "loading" | "succeeded" | "failed";
+
+export interface AuthState {
+  success: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+  message: string;
+  userInfo: UserInfo | null;
+  loading: boolean;
+
+  registerStatus: RequestStatus;
+  loginStatus: RequestStatus;
+  logoutStatus: RequestStatus;
+  profileStatus: RequestStatus;
 }
+
 
 export interface LoginData {
     email: string

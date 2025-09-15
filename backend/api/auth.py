@@ -9,21 +9,19 @@ import datetime
 def authenticate_user(
     access_token: str = Cookie(None),
     users: Users = Depends(get_user_register)
-):
+): 
     if not access_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
-
     try:
         jwt_info = jwt.decode(access_token, settings.SECRET_KEY, settings.ALGORITHM) 
- 
+        print('this is decoded',jwt_info)
         if int(datetime.datetime.now().timestamp()) > jwt_info['exp']:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session token expired!")
         
         user = users.get(user_id=jwt_info.get("user_id"))
-
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

@@ -1,62 +1,50 @@
 import { useState, useEffect } from "react"
 import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import { Menu, LogOut, Home, User, Settings, FileText, Plus, Download, Eye, Trash2, Calendar } from "lucide-react"
+import { useNavigate, NavLink } from 'react-router-dom'
+import { Menu, LogOut, Home, User, FileText, Plus, Download, Eye, Trash2, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RootState, AppDispatch } from '../../app/store'
 import { getResume, DeleteResume, resumePdf, resumeWord } from '../../features/serviceSlice'
-import { LogoutUser } from '../../features/userSlice'
+import { LogoutUser, getProfile } from '../../features/userSlice'
 import Loader from '../../components/Loader'
-import { toast } from 'react-toastify'
+import { ResumeInfo } from "@/types/serviceTypes"
 
 function Dashboard() {
   const [isOpen, setIsOpen] = useState(true)
+  const [showProfile, setShowProfile] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   
-  const { loading, success, error, resumeInfo } = useSelector((state: RootState) => state.resume)
-  const { userInfo } = useSelector((state: RootState) => state.user)
-  const [resumes, setResumes] = useState<any[]>([])
+  const { loading, success, resumeInfo } = useSelector((state: RootState) => state.resume)
+  const { userInfo, loading: userLoading } = useSelector((state: RootState) => state.user)
+  const [resumes, setResumes] = useState<ResumeInfo[]>([])
 
   useEffect(() => {
-    // Fetch user's resumes when component mounts
-    dispatch(getResume())
-  }, [dispatch])
-
-  useEffect(() => {
-    if (success && resumeInfo) {
-      // Handle different response structures
-      if (Array.isArray(resumeInfo)) {
-        setResumes(resumeInfo)
-      } else if (resumeInfo.data && Array.isArray(resumeInfo.data)) {
-        setResumes(resumeInfo.data)
-      }
+    if (success && resumeInfo.length > 0) {
+      setResumes(resumeInfo);
     }
-  }, [success, resumeInfo])
+  }, [success, resumeInfo]);
 
-  useEffect(() => {
-    if (error) {
-      toast.error(typeof error === 'string' ? error : 'Failed to load resumes')
-    }
-  }, [error])
+  console.log(resumeInfo);
 
   const handleDeleteResume = (resumeId: string) => {
     if (window.confirm('Are you sure you want to delete this resume?')) {
       dispatch(DeleteResume(resumeId))
-      // Refresh the list after deletion
+
       setTimeout(() => {
         dispatch(getResume())
       }, 1000)
     }
   }
 
-  const handleDownloadPDF = (resumeId: string) => {
-    dispatch(resumePdf(resumeId))
-  }
+const handleDownloadPDF = (resumeId: string) => {
+  dispatch(resumePdf(resumeId));
+};
 
-  const handleDownloadWord = (resumeId: string) => {
-    dispatch(resumeWord(resumeId))
-  }
+const handleDownloadWord = (resumeId: string) => {
+  dispatch(resumeWord(resumeId));
+};
+
 
   const handleLogout = () => {
     dispatch(LogoutUser())
@@ -71,9 +59,19 @@ function Dashboard() {
     })
   }
 
+  const handleViewProfile = (e?: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    if (e) e.preventDefault()
+    const nextShow = !showProfile
+    setShowProfile(nextShow)
+    if (nextShow) {
+      dispatch(getProfile())
+    }
+  }
+
   if (loading) {
     return <Loader />
   }
+
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -99,23 +97,40 @@ function Dashboard() {
           </Button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
-          <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+          <NavLink
+            to="/dashboard"
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`
+            }
+          >
             <Home className="w-5 h-5" />
             {isOpen && <span>Overview</span>}
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-600">
+          </NavLink>
+          <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
             <FileText className="w-5 h-5" />
             {isOpen && <span>My Resumes</span>}
           </a>
-          <a href="/profile/create" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+          <NavLink
+            to="/profile/create"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`
+            }
+          >
             <User className="w-5 h-5" />
             {isOpen && <span>Profile</span>}
+          </NavLink>
+          <a
+            href="#"
+            onClick={handleViewProfile}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${showProfile ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
+          >
+            <User className="w-5 h-5" />
+            {isOpen && <span>{showProfile ? 'Hide Profile' : 'View Profile'}</span>}
           </a>
         </nav>
 
-        {/* Logout */}
         <div className="p-4 border-t border-gray-200">
           <button 
             onClick={handleLogout}
@@ -127,16 +142,14 @@ function Dashboard() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-6 overflow-y-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {userInfo?.name || 'User'}!
+            Welcome back, {userInfo.name || 'User'}! 
           </h1>
           <p className="text-gray-600">Manage your AI-generated resumes and create new ones.</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
@@ -183,7 +196,38 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Resumes List */}
+        {showProfile && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Your Profile</h2>
+              <Button variant="outline" onClick={handleViewProfile}>{showProfile ? 'Close' : 'View Profile'}</Button>
+            </div>
+            <div className="p-6">
+              {userLoading ? (
+                <Loader />
+              ) : userInfo ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div><span className="font-medium text-gray-700">Name:</span> <span className="text-gray-900">{userInfo.name}</span></div>
+                  <div><span className="font-medium text-gray-700">Email:</span> <span className="text-gray-900">{userInfo.email}</span></div>
+                  {userInfo.role && (<div><span className="font-medium text-gray-700">Role:</span> <span className="text-gray-900">{userInfo.role}</span></div>)}
+                  {userInfo.phone && (<div><span className="font-medium text-gray-700">Phone:</span> <span className="text-gray-900">{userInfo.phone}</span></div>)}
+                  {userInfo.address && (<div><span className="font-medium text-gray-700">Address:</span> <span className="text-gray-900">{userInfo.address}</span></div>)}
+                  {userInfo.linkedin && (<div><span className="font-medium text-gray-700">LinkedIn:</span> <a className="text-blue-600 hover:underline" href={userInfo.linkedin} target="_blank" rel="noreferrer">{userInfo.linkedin}</a></div>)}
+                  {userInfo.github && (<div><span className="font-medium text-gray-700">GitHub:</span> <a className="text-blue-600 hover:underline" href={userInfo.github} target="_blank" rel="noreferrer">{userInfo.github}</a></div>)}
+                  {userInfo.bio && (
+                    <div className="md:col-span-2">
+                      <span className="font-medium text-gray-700">Bio:</span>
+                      <p className="text-gray-900 mt-1">{userInfo.bio}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-600">No profile found. You can create one from the Profile page.</p>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -229,7 +273,7 @@ function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2"> 
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -238,22 +282,25 @@ function Dashboard() {
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </Button>
+
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDownloadPDF(resume.$id || resume.id)}
+                        onClick={() => handleDownloadPDF(resume.id)}
                       >
                         <Download className="h-4 w-4 mr-2" />
                         PDF
                       </Button>
+
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDownloadWord(resume.$id || resume.id)}
+                        onClick={() => handleDownloadWord(resume.id)}
                       >
                         <Download className="h-4 w-4 mr-2" />
                         Word
                       </Button>
+
                       <Button 
                         variant="outline" 
                         size="sm"

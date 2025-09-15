@@ -44,7 +44,7 @@ function Login() {
         autoClose: 3000,
       });
       dispatch(removeSuccess());
-      navigate("/dashboard"); // redirect after login
+      navigate("/");
     }
   }, [loginStatus, dispatch, navigate]);
 

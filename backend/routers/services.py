@@ -20,8 +20,11 @@ router = APIRouter(
 ) 
 @router.post('/resume/create', response_model=ResumeOutputSchema)
 def generate_resume(data: ResumeInputSchema, current_user: Dict = Depends(authenticate_user)):
+    print('from function',current_user)
     user = get_user_profile(current_user['userId'])
+    print(user)
     user_info = user['profile']
+    print('tjis is user_info',user_info)
 
     input_data = data.model_dump()
     input_data.update({
@@ -45,7 +48,6 @@ def generate_resume(data: ResumeInputSchema, current_user: Dict = Depends(authen
     if resume and resume['error'] != '':
         return ResumeOutputSchema(**resume)
     
-    # insert into collection_id
     create_resume(resume, settings.APPWRITE_DATABASE_ID, settings.APPWRITE_CV_COLLECTION_ID, current_user['userId'])
     
     return ResumeOutputSchema(**resume)
@@ -54,14 +56,16 @@ def generate_resume(data: ResumeInputSchema, current_user: Dict = Depends(authen
 def get_resumes(user: Dict = Depends(authenticate_user)):
     all_resumes = get_curricullum_vitae(user['userId'])
     
-    if all_resumes is None:
-        return {"success": False, "message": "Could not find resumes"}
+    if not all_resumes:
+        return {"error": "No resumes found"}
     
-    if all_resumes['error']:
-        return {"success": False, "message": all_resumes['error']}
+    if isinstance(all_resumes, dict) and "error" in all_resumes:
+        return all_resumes
     
     if len(all_resumes) > 0:
         return {"success": True, "data": all_resumes}
+    
+    return all_resumes
 
     
 @router.get('/resume/get/{id}')

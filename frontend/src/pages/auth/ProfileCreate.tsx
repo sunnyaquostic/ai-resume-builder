@@ -5,14 +5,14 @@ import { toast } from 'react-toastify';
 import { User, Phone, MapPin, Linkedin, Github, FileText, ArrowLeft } from 'lucide-react';
 import type { RootState, AppDispatch } from '../../app/store';
 import { removeErrors, removeSuccess } from '@/features/serviceSlice';
-import { ProfileSetUp } from '../../features/userSlice';
+import { profileSetUp } from '../../features/userSlice';
 import Loader from '@/components/Loader';
 import { Button } from '@/components/ui/button';
 
 function ProfileCreate() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { loading, success, error, userInfo, message } = useSelector((state: RootState) => state.user)
+  const { loading, profileStatus, error, userInfo, message } = useSelector((state: RootState) => state.user)
   const [userProfile, setUserProfile] = useState({
       name: '',
       email: '',
@@ -33,7 +33,6 @@ function ProfileCreate() {
     github
   } = userProfile
 
-  // Load existing profile data if available
   useEffect(() => {
     if (userInfo) {
       setUserProfile({
@@ -55,26 +54,28 @@ function ProfileCreate() {
     })
   }
 
-  useEffect(() => {
-    if (error) {
-        const message = typeof error === "string" ? error : JSON.stringify(error)
-        toast.error(message, {position:'top-center', autoClose:3000})
-        dispatch(removeErrors())
-    }
-  },[dispatch, error])
+// error handling
+useEffect(() => {
+  if (profileStatus === "failed" && error) {
+    const message = typeof error === "string" ? error : JSON.stringify(error);
+    toast.error(message, { position: 'top-center', autoClose: 3000 });
+    dispatch(removeErrors());
+  }
+}, [profileStatus, error, dispatch]);
 
-  useEffect(() => {
-    if (success) {
-      toast.success(message || 'Profile saved successfully', {position:'top-center', autoClose:3000})
-      dispatch(removeSuccess())
-      navigate('/dashboard')
-    }
-  }, [dispatch, success, message, navigate])
+// success handling
+useEffect(() => {
+  if (profileStatus === "succeeded") {
+    toast.success(message || 'Profile saved successfully', { position:'top-center', autoClose:3000 });
+    dispatch(removeSuccess());
+    navigate('/dashboard');
+  }
+}, [profileStatus, message, dispatch, navigate]);
+
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    // Basic validation
     if (!name.trim()) {
       toast.error('Name is required', {position:'top-center', autoClose:3000})
       return
@@ -85,7 +86,7 @@ function ProfileCreate() {
       return
     }
 
-    dispatch(ProfileSetUp(userProfile))
+   dispatch(profileSetUp(userProfile))
   }
 
   return (
@@ -95,7 +96,7 @@ function ProfileCreate() {
         : 
             <main className="w-full min-h-[100vh] h-auto bg-gradient-to-br from-blue-50 to-indigo-100 py-12 p-6">
             <div className="max-w-4xl mx-auto">
-              {/* Header */}
+
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center mb-4">
                   <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -107,7 +108,6 @@ function ProfileCreate() {
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Profile Preview */}
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -162,13 +162,11 @@ function ProfileCreate() {
                   </div>
                 </div>
 
-                {/* Form */}
                 <div className="lg:col-span-2">
                   <form 
                     onSubmit={handleSubmit}
                     className="bg-white rounded-xl shadow-lg p-8 space-y-6"
                   >
-                    {/* Basic Information */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -236,7 +234,6 @@ function ProfileCreate() {
                       </div>
                     </div>
 
-                    {/* Professional Links */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Links</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -272,7 +269,6 @@ function ProfileCreate() {
                       </div>
                     </div>
                     
-                    {/* Bio */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">About You</h3>
                       <div>
@@ -291,7 +287,6 @@ function ProfileCreate() {
                       </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-4 pt-6">
                       <Button
                         type="button"

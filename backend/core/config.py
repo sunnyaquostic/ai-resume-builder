@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     DEBUG: bool = False
     ALLOWED_ORIGINS: str
+    IS_PRODUCTION: bool 
 
     OPENAI_API_KEY: str
     LLM_MODEL: str

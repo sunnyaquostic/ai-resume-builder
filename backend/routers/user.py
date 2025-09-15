@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
+from fastapi.responses import JSONResponse
 from api.profile import check_profile_exists
 from schema.userschema import CreateUserSchema, UserLoginSchema, AuthResponse, ProfileSchema, ProfileInputSchema
 from appwrite.services.users import Users
@@ -48,45 +49,58 @@ def register(user_data: CreateUserSchema, account: Account = Depends(get_account
             userInfo=None
         )
 
-@router.post('/login', response_model=AuthResponse)
-def login(userData: UserLoginSchema, response: Response, account: Account = Depends(get_account), users: Users = Depends(get_user_register)):
+@router.post("/login", response_model=AuthResponse)
+def login(
+    userData: UserLoginSchema,
+    account: Account = Depends(get_account),
+    users: Users = Depends(get_user_register),
+):
     user_session = account.create_email_password_session(
         email=userData.email,
         password=userData.password
     )
 
     payload = {
-        "user_id":user_session['userId'],
-        "email":user_session['providerUid'], 
-        "secret":user_session['secret'],
+        "user_id": user_session['userId'],
+        "email": user_session['providerUid'],
+        "secret": user_session['secret'],
         "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2)
     }
-    jwt_token = jwt.encode(
-        payload, 
-        settings.SECRET_KEY, 
-        settings.ALGORITHM
-    )
+    jwt_token = jwt.encode(payload, settings.SECRET_KEY, settings.ALGORITHM)
 
-    response.set_cookie(
-        key="access_token",
-        value=jwt_token,
-        httponly=True, 
-        secure=False,  
-        samesite="lax",  
-        max_age=7200      
-    )
-
-    return AuthResponse(
+    auth_response = AuthResponse(
         success=True,
         message="You logged in successfully",
         userInfo={
             "id": user_session['userId'],
             "email": user_session['providerUid'],
-            "name": users.get(user_session['userId'])['name'] 
+            "name": users.get(user_session['userId'])['name']
         },
-        error=None,
+        error=None
     )
-    
+
+    response = JSONResponse(content=auth_response.model_dump())
+    response.set_cookie(
+        key="access_token",
+        value=jwt_token,
+        httponly=True,
+        secure=False, 
+        samesite="lax" if not settings.IS_PRODUCTION else "none",
+        max_age=60 * 60 * 24,
+        path='/'
+    )
+
+    return response
+
+
+@router.get('/me')
+def get_session(current_user = Depends(authenticate_user)):
+    return {
+        "userId": current_user["userId"],
+        "email": current_user.get("email"),
+        "name": current_user.get("name")
+    }
+
 @router.post('/profile/create')
 def create_profile(data: ProfileInputSchema, current_user = Depends(authenticate_user)):
 
@@ -185,7 +199,8 @@ def logout(response: Response, request: Request, account: Account = Depends(get_
             key="access_token",
             httponly=True,
             secure=False,
-            samesite="lax"
+            samesite="lax",
+            path='/'
         )
 
         return AuthResponse(
@@ -200,4 +215,8 @@ def logout(response: Response, request: Request, account: Account = Depends(get_
             message="Logout failed",
             error=str(e),
             userInfo=None
-        )   
+        )  
+        
+@router.get("/auth")
+def get_me(current_user: dict = Depends(authenticate_user)):
+    return {"user": current_user} 

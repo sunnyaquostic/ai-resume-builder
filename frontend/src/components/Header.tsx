@@ -1,23 +1,29 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../app/store';
+import { Link, useNavigate, NavLink } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../app/store';
 import { Button } from './ui/button';
+import { LogoutUser } from '@/features/userSlice';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, userInfo } = useSelector((state: RootState) => state.user);
 
-  const handleLogout = () => {
-    // Dispatch logout action here
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await dispatch(LogoutUser()).unwrap();
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center">
               <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -27,34 +33,39 @@ const Header: React.FC = () => {
             </Link>
           </div>
 
-          {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link 
-              to="/" 
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `${isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700'} hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors`
+              }
+              end
             >
               Home
-            </Link>
-            <Link 
-              to="/features" 
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            </NavLink>
+            <NavLink
+              to="/features"
+              className={({ isActive }) =>
+                `${isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700'} hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors`
+              }
             >
               Features
-            </Link>
-            <Link 
-              to="/pricing" 
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            </NavLink>
+            <NavLink
+              to="/pricing"
+              className={({ isActive }) =>
+                `${isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700'} hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors`
+              }
             >
               Pricing
-            </Link>
+            </NavLink>
           </nav>
 
-          {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700">
-                  Welcome, {userInfo?.name || 'User'}
+                  Welcome, {userInfo.name || 'User'}
                 </span>
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm">

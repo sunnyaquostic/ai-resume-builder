@@ -1,78 +1,87 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/api";
 import type { 
-    UserData, 
-    UserInfo, 
-    AuthState, 
-    LoginData,
-    UserProfile,
-    AuthResponse
+  UserData, 
+  UserInfo, 
+  AuthState, 
+  LoginData,
+  UserProfile,
+  AuthResponse,
 } from "../types/userTypes";
 
-export const registerUser = createAsyncThunk<AuthResponse, UserData, { rejectValue: string }>(
-  "user/create",
+type RejectValue = string;
+
+
+export const registerUser = createAsyncThunk<AuthResponse, UserData, { rejectValue: RejectValue }>(
+  "user/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const config = { 
-        headers: { "Content-Type": "application/json" } 
-      };
-
-      const { data } = await axios.post<AuthResponse>(`/api/v1/signup`, userData, config);
+      const { data } = await api.post<AuthResponse>("/v1/signup", userData);
       return data;
     } catch (err) {
-      return rejectWithValue(`Registration Failed: ${JSON.stringify(err)}`);
+      console.error("Registration failed:", err);
+      return rejectWithValue("Registration failed");
     }
   }
 );
 
-export const LoginUser = createAsyncThunk<UserInfo, LoginData, {rejectValue: string}>(
+export const LoginUser = createAsyncThunk<AuthState, LoginData, { rejectValue: RejectValue }>(
   "user/login",
   async (loginData, { rejectWithValue }) => {
     try {
-      const config = { headers: {"Content-Type": "application/json"} };
-      const { data } = await axios.post<UserInfo>('/api/v1/login', loginData, config);
+      const { data } = await api.post<AuthState>("/v1/login", loginData);
       return data;
     } catch (err) {
-      console.error("Error while login...", err);
+      console.error("Login failed:", err);
       return rejectWithValue("Login failed");
     }
   }
 );
 
-export const LogoutUser = createAsyncThunk<UserInfo, void, {rejectValue: string}>(
+export const LogoutUser = createAsyncThunk<void, void, { rejectValue: RejectValue }>(
   "user/logout",
   async (_, { rejectWithValue }) => {
     try {
-      const config = { headers: {"Content-Type": "application/json"} };
-      const { data } = await axios.post<UserInfo>('/api/v1/logout', config);
-      return data;
+      await api.post("/v1/logout", {});
     } catch (err) {
-      console.error("Error while logout...", err);
+      console.error("Logout failed:", err);
       return rejectWithValue("Logout failed");
     }
   }
 );
 
-export const ProfileSetUp = createAsyncThunk<UserInfo, UserProfile, { rejectValue: string }>(
-  "user/create-profile",
-  async (userProfile, { rejectWithValue }) => {
+export const getProfile = createAsyncThunk<UserInfo, void, { rejectValue: RejectValue }>(
+  "user/getProfile",
+  async (_, { rejectWithValue }) => {
     try {
-      const config = { headers: {'Content-Type': 'application/json'} };
-      const { data } = await axios.post<UserInfo>('/api/v1/profile/create', userProfile, config);
-      return data;
-    } catch (error) {
-      console.error("Profile creation failed", error);
-      return rejectWithValue("Error occurred while creating profile");
+      const { data } = await api.get<{ user: UserInfo }>("/v1/me");
+      return data.user;
+    } catch (err) {
+      console.error("Get profile failed:", err);
+      return rejectWithValue("Failed to fetch profile");
     }
   }
 );
+
+export const profileSetUp = createAsyncThunk<UserInfo, UserProfile, { rejectValue: RejectValue }>(
+  "user/profileSetUp",
+  async (userProfile, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post<UserInfo>("/v1/profile/create", userProfile);
+      return data;
+    } catch (err) {
+      console.error("Profile setup failed:", err);
+      return rejectWithValue("Failed to setup profile");
+    }
+  }
+);
+
 
 export const GetProfile = createAsyncThunk<UserInfo, void, { rejectValue: string }>(
   "user/get-profile",
   async (_, { rejectWithValue }) => {
     try {
-      const config = { headers: {'Content-Type': 'application/json'} };
-      const { data } = await axios.get<UserInfo>('/api/v1/profile/get', config);
+      const { data } = await api.get<UserInfo>("/v1/profile/get");
       return data;
     } catch (error) {
       console.error("Failed to read profile", error);
@@ -81,14 +90,21 @@ export const GetProfile = createAsyncThunk<UserInfo, void, { rejectValue: string
   }
 );
 
-type RequestStatus = "idle" | "loading" | "succeeded" | "failed";
+export const GetSession = createAsyncThunk<UserInfo, void, { rejectValue: string }>(
+  "user/get-session",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await api.get<UserInfo>("/v1/me");
+      return data;
+    } catch (error) {
+      console.error("Failed to read session", error);
+      return rejectWithValue("Error occurred while reading session");
+    }
+  }
+);
 
-const initialState: AuthState & {
-  registerStatus: RequestStatus;
-  loginStatus: RequestStatus;
-  logoutStatus: RequestStatus;
-  profileStatus: RequestStatus;
-} =  {
+
+const initialState: AuthState = {
   success: false,
   error: null,
   isAuthenticated: false,
@@ -111,117 +127,118 @@ const userSlice = createSlice({
     },
     removeSuccess: (state) => {
       state.success = false;
-    }
+      state.message = "";
+    },
   },
   extraReducers: (builder) => {
-    builder.addCase(registerUser.pending, (state) => {
-      state.registerStatus = "loading";
-      state.loading = true;
-      state.error = null;
-      state.success = false;
-    });
-    builder.addCase(registerUser.fulfilled, (state, action) => {
-      state.registerStatus = "succeeded";
-      state.loading = false;
-      state.success = true;
-      state.isAuthenticated = true;
-      state.userInfo = action.payload.userInfo ?? null;
-      state.error = null;
-      state.message = action.payload?.message ?? ""
-    });
-    builder.addCase(registerUser.rejected, (state, action) => {
-      state.registerStatus = "failed";
-      state.loading = false;
-      state.error = action.payload ?? "Something went wrong";
-      state.success = false;
-    });
+    /* REGISTER */
+    builder
+      .addCase(registerUser.pending, (state) => {
+        state.registerStatus = "loading";
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.registerStatus = "succeeded";
+        state.loading = false;
+        state.success = true;
+        state.isAuthenticated = true;
+        state.userInfo = action.payload.userInfo ?? null;
+        state.message = action.payload.message ?? "";
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.registerStatus = "failed";
+        state.loading = false;
+        state.success = false;
+        state.error = action.payload ?? "Registration failed";
+      });
 
-    builder.addCase(LoginUser.pending, (state) => {
-      state.loginStatus = "loading";
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(LoginUser.fulfilled, (state, action) => {
-      state.loginStatus = "succeeded";
-      state.loading = false;
-      state.success = true;
-      state.message = "Login successfully";
-      state.error = null;
-      state.userInfo = action.payload;
-      state.isAuthenticated = Boolean(action.payload);
+    /* LOGIN */
+    builder
+      .addCase(LoginUser.pending, (state) => {
+        state.loginStatus = "loading";
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(LoginUser.fulfilled, (state, action) => {
+        state.loginStatus = "succeeded";
+        state.loading = false;
+        state.success = action.payload.success;
+        state.message = action.payload.message;
+        state.userInfo = action.payload.userInfo ?? null;
+        state.isAuthenticated = Boolean(action.payload.userInfo);
+        state.error = action.payload.error ? String(action.payload.error) : null;
+      })
+      .addCase(LoginUser.rejected, (state, action) => {
+        state.loginStatus = "failed";
+        state.loading = false;
+        state.success = false;
+        state.userInfo = null;
+        state.isAuthenticated = false;
+        state.error = action.payload ?? "Login failed";
+      });
 
-      localStorage.setItem("user", JSON.stringify(state.userInfo));
-      localStorage.setItem("isAuthenticated", JSON.stringify(Boolean(state.userInfo)));  
-    });
-    builder.addCase(LoginUser.rejected, (state, action) => {
-      state.loginStatus = "failed";
-      state.loading = false;
-      state.error = action.payload ?? "Error occurred while login";
-      state.success = false;
-      state.userInfo = null;
-      state.isAuthenticated = false;
-    });
+    /* LOGOUT */
+    builder
+      .addCase(LogoutUser.pending, (state) => {
+        state.logoutStatus = "loading";
+        state.loading = true;
+      })
+      .addCase(LogoutUser.fulfilled, (state) => {
+        state.logoutStatus = "succeeded";
+        state.loading = false;
+        state.success = true;
+        state.isAuthenticated = false;
+        state.userInfo = null;
+        state.message = "Logout successful";
+      })
+      .addCase(LogoutUser.rejected, (state, action) => {
+        state.logoutStatus = "failed";
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.userInfo = null;
+        state.error = action.payload ?? "Logout failed";
+      });
 
-    builder.addCase(LogoutUser.pending, (state) => {
-      state.logoutStatus = "loading";
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(LogoutUser.fulfilled, (state) => {
-      state.logoutStatus = "succeeded";
-      state.loading = false;
-      state.success = true;
-      state.message = "Logout successfully";
-      state.isAuthenticated = false;
-      state.userInfo = null;
-      state.error = null;
+    /* PROFILE SETUP */
+    builder
+      .addCase(profileSetUp.pending, (state) => {
+        state.profileStatus = "loading";
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(profileSetUp.fulfilled, (state, action) => {
+        state.profileStatus = "succeeded";
+        state.loading = false;
+        state.userInfo = action.payload;
+        state.message = "Profile updated successfully";
+      })
+      .addCase(profileSetUp.rejected, (state, action) => {
+        state.profileStatus = "failed";
+        state.loading = false;
+        state.error = action.payload ?? "Profile setup failed";
+        state.message = "Profile setup failed";
+      });
 
-      localStorage.removeItem("user");
-      localStorage.removeItem("isAuthenticated");
-    });
-    builder.addCase(LogoutUser.rejected, (state, action) => {
-      state.logoutStatus = "failed";
-      state.loading = false;
-      state.error = action.payload ?? "Logout failed";
-    });
+    /* GET PROFILE */
+    builder
+      .addCase(getProfile.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userInfo = action.payload;
+        state.isAuthenticated = Boolean(action.payload);
+      })
+      .addCase(getProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.userInfo = null;
+        state.isAuthenticated = false;
+        state.error = action.payload ?? "Failed to fetch profile";
+      });
+  },
 
-    builder.addCase(ProfileSetUp.pending, (state) => {
-      state.profileStatus = "loading";
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(ProfileSetUp.fulfilled, (state, action) => {
-      state.profileStatus = "succeeded";
-      state.loading = false;
-      state.error = null;
-      state.message = "Profile completed successfully";
-      state.userInfo = action.payload;
-    });
-    builder.addCase(ProfileSetUp.rejected, (state, action) => {
-      state.profileStatus = "failed";
-      state.loading = false;
-      state.error = action.payload ?? "Failed to create profile";
-      state.message = "Failed to create profile";
-    });
-
-    builder.addCase(GetProfile.pending, (state) => {
-      state.profileStatus = "loading";
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(GetProfile.fulfilled, (state, action) => {
-      state.profileStatus = "succeeded";
-      state.loading = false;
-      state.error = null;
-      state.success = true;
-      state.userInfo = action.payload;
-    });
-    builder.addCase(GetProfile.rejected, (state, action) => {
-      state.profileStatus = "failed";
-      state.loading = false;
-      state.error = action.payload ?? "Error occurred while loading profile";
-    });
-  }
 });
 
 export const { removeErrors, removeSuccess } = userSlice.actions;

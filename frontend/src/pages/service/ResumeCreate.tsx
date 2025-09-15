@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState, type ChangeEvent } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
-import { FileText, User, Briefcase, GraduationCap, Award, Code, ArrowLeft, Wand2 } from 'lucide-react';
+import { FileText, GraduationCap, Award, Code, ArrowLeft, Wand2 } from 'lucide-react';
 import type { RootState, AppDispatch } from '../../app/store';
 import { removeErrors, removeSuccess } from '../../features/serviceSlice';
 import { createResume } from '../../features/serviceSlice';
@@ -64,7 +64,6 @@ function ResumeCreate() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    // Basic validation
     if (!formData.title.trim()) {
       toast.error('Resume title is required', {position:'top-center', autoClose:3000})
       return
@@ -258,7 +257,6 @@ function ResumeCreate() {
                   />
                 </div>
                 
-                {/* Review Section */}
                 <div className="bg-blue-50 rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-2">Review Your Information</h4>
                   <div className="space-y-2 text-sm text-gray-600">
@@ -288,7 +286,6 @@ function ResumeCreate() {
   return (
     <main className="w-full min-h-[100vh] h-auto bg-gradient-to-br from-blue-50 to-indigo-100 py-12 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -300,7 +297,6 @@ function ResumeCreate() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Progress Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress</h3>
@@ -337,12 +333,10 @@ function ResumeCreate() {
             </div>
           </div>
 
-          {/* Form */}
           <div className="lg:col-span-3">
             <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
               {renderStepContent()}
 
-              {/* Navigation Buttons */}
               <div className="flex justify-between pt-8 mt-8 border-t border-gray-200">
                 <Button
                   type="button"
