@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from fastapi.responses import JSONResponse
 from api.profile import check_profile_exists
-from schema.userschema import CreateUserSchema, UserLoginSchema, AuthResponse, ProfileSchema, ProfileInputSchema
+from schema.userschema import CreateUserSchema, UserLoginSchema, AuthResponse, ProfileSchema, ProfileInputSchema, ResetPasswordSchema
 from appwrite.services.users import Users
 from appwrite.services.account import Account
 from core.appwrite import get_account
@@ -16,6 +16,14 @@ router = APIRouter(
     prefix='/v1',
     tags=['users']
 ) 
+
+def make_response(success: bool, message: str, error: str | None = None, userInfo: dict | None = None):
+    return AuthResponse(
+        success=success,
+        message=message,
+        error=error,
+        userInfo=userInfo
+    )
 
 @router.post('/signup', response_model=AuthResponse)
 def register(user_data: CreateUserSchema, account: Account = Depends(get_account)):
@@ -35,19 +43,13 @@ def register(user_data: CreateUserSchema, account: Account = Depends(get_account
             name=name,
         )
         
-        return AuthResponse(
-            success=True,
-            message="You registered successfully",
-            userInfo=dict(new_user),
-            error=None,
-        )
+        if new_user:
+            verification = account.create_verification(
+                url='http://localhost:5173/api/v1/verifyemail'
+            )
+        return make_response(success=True, message="You registered successfully", error=None, userInfo=dict(new_user))
     except Exception as e:
-        return AuthResponse(
-            success=False,
-            message="Registration failed",
-            error=str(e),  
-            userInfo=None
-        )
+        return make_response(success=False, message="Registration failed", error=str(e), userInfo=None)
 
 @router.post("/login", response_model=AuthResponse)
 def login(
@@ -68,15 +70,15 @@ def login(
     }
     jwt_token = jwt.encode(payload, settings.SECRET_KEY, settings.ALGORITHM)
 
-    auth_response = AuthResponse(
+    auth_response = make_response(
         success=True,
         message="You logged in successfully",
+        error=None,                     
         userInfo={
             "id": user_session['userId'],
             "email": user_session['providerUid'],
             "name": users.get(user_session['userId'])['name']
-        },
-        error=None
+        }
     )
 
     response = JSONResponse(content=auth_response.model_dump())
@@ -91,15 +93,6 @@ def login(
     )
 
     return response
-
-
-@router.get('/me')
-def get_session(current_user = Depends(authenticate_user)):
-    return {
-        "userId": current_user["userId"],
-        "email": current_user.get("email"),
-        "name": current_user.get("name")
-    }
 
 @router.post('/profile/create')
 def create_profile(data: ProfileInputSchema, current_user = Depends(authenticate_user)):
@@ -203,20 +196,59 @@ def logout(response: Response, request: Request, account: Account = Depends(get_
             path='/'
         )
 
-        return AuthResponse(
-            success=True,
-            message="You logged out successfully",
-            error=None,
-            userInfo=None
-        )
+        return make_response(success=True, message="You logged out successfully", error=None, userInfo=None)
+
     except Exception as e:
-        return AuthResponse(
-            success=False,  
-            message="Logout failed",
-            error=str(e),
-            userInfo=None
-        )  
+        return make_response(success=False, message="Logout failed", error=str(e), userInfo=None)
+
+@router.put('/password/request-reset', response_model=AuthResponse)
+def password_reset_link(response: Response, request: Request, data: ResetPasswordSchema, account: Account = Depends(get_account)):
+
+    try:
+        result = account.create_recovery(
+            email = data.email, 
+            url = 'http://localhost:5437/api/v1/password/reset'
+        )
+
+        return make_response(success=True, message="Reset link has been sent to your email", error=None, userInfo=result)
         
-@router.get("/auth")
-def get_me(current_user: dict = Depends(authenticate_user)):
-    return {"user": current_user} 
+    except Exception as e:
+        return make_response(success=False, message="Error occurred while sending email", error=str(e), userInfo=None)          
+        
+@router.post('/password/reset', response_model=AuthResponse)
+def password_reset_link(response: Response, request: Request, data: ResetPasswordSchema, account: Account = Depends(get_account)):
+    try:
+        user_id = request.query_params.get('userId')
+        secret = request.query_params.get('secret')
+        
+        if not user_id or not secret:
+            make_response(success=False, message='The link is invalid', error='Missing query Parameters', userInfo=None)
+        
+        if not data.password or not data.confirmPassword:
+            make_response(success=False, message="All fields are required", error='All field are required', userInfo=None)
+            
+        result = account.update_recovery(
+            user_id = user_id,
+            secret = secret, 
+            password = data.password
+        )
+
+        make_response(success=True, message="Password reset successfully", error=None, userInfo=result)
+    except Exception as e:
+        make_response(success=False, message="Password reset Failed", error=str(e),  userInfo=None)
+
+@router.post('/email/verify', response_model=AuthResponse)
+def verify_email(req: Request, account: Account = Depends(get_account)):
+    try:
+        data = {
+            "userId": req.query_params.get('userId'),
+            "secret": req.query_params.get('secret')
+        }
+        result = account.verify_email(
+            user_id=data['userId'],
+            secret=data['secret']
+        )
+        return make_response(success=True, message="Email verified successfully", error=None, userInfo=result)
+    except Exception as e:
+        return make_response(success=False, message="Email verification failed", error=str(e), userInfo=None)
+

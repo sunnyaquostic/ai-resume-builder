@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 from typing import Dict, Optional, Union
 
 class CreateUserSchema(BaseModel):
@@ -47,4 +47,20 @@ class ProfileInputSchema(BaseModel):
     github: str | None = None
     role: str = "user"
 
-    
+class ResetPasswordSchema(BaseModel):
+    email: Optional[str] = None
+    password: Optional[str] = Field(None, min_length=8, max_length=256)
+    confirmPassword: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_request(self) -> "ResetPasswordSchema":
+        if self.email:
+            return self
+
+        if not self.password or not self.confirmPassword:
+            raise ValueError("Password and confirmPassword are required when email is not provided")
+
+        if self.password != self.confirmPassword:
+            raise ValueError("Passwords do not match")
+
+        return self
