@@ -1,5 +1,4 @@
 from appwrite.query import Query
-from pyparsing import Optional
 from core.appwrite import database
 from core.config import settings 
 

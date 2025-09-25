@@ -31,74 +31,83 @@ def create_user_collection(db_id: str):
         db.create_string_attribute(db_id, collection_id, "github", 250, required=False)
         db.create_string_attribute(db_id, collection_id, "role", 50, required=False, default="user")
 
-        education = db.create_collection(db_id, "unique()", "education", permissions=[], document_security=True)
-        db.create_string_attribute(db_id, education["$id"], "institution", 225, required=True)
-        db.create_string_attribute(db_id, education["$id"], "degree", 100, required=True)
-        db.create_string_attribute(db_id, education["$id"], "field_of_study", 150, required=True)
-        db.create_datetime_attribute(db_id, education["$id"], "start_date", required=True)
-        db.create_datetime_attribute(db_id, education["$id"], "end_date", required=False)
+        # education = db.create_collection(db_id, "unique()", "education", permissions=[], document_security=True)
+        # db.create_string_attribute(db_id, education["$id"], "institution", 225, required=True)
+        # db.create_string_attribute(db_id, education["$id"], "degree", 100, required=True)
+        # db.create_string_attribute(db_id, education["$id"], "field_of_study", 150, required=True)
+        # db.create_datetime_attribute(db_id, education["$id"], "start_date", required=True)
+        # db.create_datetime_attribute(db_id, education["$id"], "end_date", required=False)
+        # db.create_relationship_attribute(
+        #     database_id=db_id,
+        #     collection_id=education["$id"],
+        #     related_collection_id=collection_id,
+        #     type="oneToOne",
+        #     two_way=False,
+        #     key="user_id"
+        # )
+
+        # experience = db.create_collection(db_id, "unique()", "experience", permissions=[], document_security=True)
+        # db.create_string_attribute(db_id, experience["$id"], "company", 150, required=True)
+        # db.create_string_attribute(db_id, experience["$id"], "role", 100, required=True)
+        # db.create_string_attribute(db_id, experience["$id"], "description", 1000, required=False)
+        # db.create_datetime_attribute(db_id, experience["$id"], "start_date", required=True)
+        # db.create_datetime_attribute(db_id, experience["$id"], "end_date", required=False)
+        # db.create_relationship_attribute(
+        #     database_id=db_id,
+        #     collection_id=experience["$id"],
+        #     related_collection_id=collection_id,
+        #     type="oneToOne",
+        #     two_way=False,
+        #     key="user_id"
+        # )
+
+        # skills = db.create_collection(db_id, "unique()", "skills", permissions=[], document_security=True)
+        # db.create_string_attribute(db_id, skills["$id"], "skill_name", 100, required=True)
+        # db.create_string_attribute(db_id, skills["$id"], "proficiency", 50, required=False)
+        # db.create_relationship_attribute(
+        #     database_id=db_id,
+        #     collection_id=skills["$id"],
+        #     related_collection_id=collection_id,
+        #     type="oneToOne",
+        #     two_way=False,
+        #     key="user_id"
+        # )
+
+        # projects = db.create_collection(db_id, "unique()", "projects", permissions=[], document_security=True)
+        # db.create_string_attribute(db_id, projects["$id"], "title", 150, required=True)
+        # db.create_string_attribute(db_id, projects["$id"], "description", 500, required=False)
+        # db.create_url_attribute(db_id, projects["$id"], "link", required=False)
+        # db.create_relationship_attribute(
+        #     database_id=db_id,
+        #     collection_id=projects["$id"],
+        #     related_collection_id=collection_id,
+        #     type="oneToOne",
+        #     two_way=False,
+        #     key="user_id"
+        # )
+
+        curriculum_vitae = db.create_collection(db_id, "unique()", "curriculum_vitae", permissions=[], document_security=True)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "title", 150, required=True)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "name", 50, required=True)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "email", 50, required=True)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "phone", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "linkedin", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "github", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "professionalsummary", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "skills", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "workexperience", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "projects", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "education", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "certifications", required=False)
+        db.create_string_attribute(db_id, curriculum_vitae["$id"], "user_id", required=False)
         db.create_relationship_attribute(
             database_id=db_id,
-            collection_id=education["$id"],
+            collection_id=curriculum_vitae["$id"],
             related_collection_id=collection_id,
             type="oneToOne",
             two_way=False,
             key="user_id"
         )
-
-        experience = db.create_collection(db_id, "unique()", "experience", permissions=[], document_security=True)
-        db.create_string_attribute(db_id, experience["$id"], "company", 150, required=True)
-        db.create_string_attribute(db_id, experience["$id"], "role", 100, required=True)
-        db.create_string_attribute(db_id, experience["$id"], "description", 1000, required=False)
-        db.create_datetime_attribute(db_id, experience["$id"], "start_date", required=True)
-        db.create_datetime_attribute(db_id, experience["$id"], "end_date", required=False)
-        db.create_relationship_attribute(
-            database_id=db_id,
-            collection_id=experience["$id"],
-            related_collection_id=collection_id,
-            type="oneToOne",
-            two_way=False,
-            key="user_id"
-        )
-
-        skills = db.create_collection(db_id, "unique()", "skills", permissions=[], document_security=True)
-        db.create_string_attribute(db_id, skills["$id"], "skill_name", 100, required=True)
-        db.create_string_attribute(db_id, skills["$id"], "proficiency", 50, required=False)
-        db.create_relationship_attribute(
-            database_id=db_id,
-            collection_id=skills["$id"],
-            related_collection_id=collection_id,
-            type="oneToOne",
-            two_way=False,
-            key="user_id"
-        )
-
-        projects = db.create_collection(db_id, "unique()", "projects", permissions=[], document_security=True)
-        db.create_string_attribute(db_id, projects["$id"], "title", 150, required=True)
-        db.create_string_attribute(db_id, projects["$id"], "description", 500, required=False)
-        db.create_url_attribute(db_id, projects["$id"], "link", required=False)
-        db.create_relationship_attribute(
-            database_id=db_id,
-            collection_id=projects["$id"],
-            related_collection_id=collection_id,
-            type="oneToOne",
-            two_way=False,
-            key="user_id"
-        )
-
-        resume = db.create_collection(db_id, "unique()", "resume", permissions=[], document_security=True)
-        db.create_string_attribute(db_id, resume["$id"], "title", 150, required=True)
-        db.create_string_attribute(db_id, resume["$id"], "template_id", 50, required=True)
-        db.create_url_attribute(db_id, resume["$id"], "pdf_url", required=False)
-        db.create_relationship_attribute(
-            database_id=db_id,
-            collection_id=resume["$id"],
-            related_collection_id=collection_id,
-            type="oneToOne",
-            two_way=False,
-            key="user_id"
-        )
-
 
         return {"message": "All collections created successfully"}
 
@@ -184,22 +193,6 @@ def get_user_profile(user_id: str):
     except Exception as e:
         print(str(e) or "Error occurred while fetching user")
         return None
-
-def get_all_users(db_id: str, collection_id: str):
-    try:
-        db = database() 
-        users = db.list_documents(
-            database_id = db_id,
-            collection_id = collection_id,
-            queries = []
-        )
-        
-        return users
-    
-    except Exception as e:
-        print(str(e) or "Error occured while fetching users")
-        return []
-
 
 def update_users(db_id: str, collection_id: str, doc_id: str, userData: Dict):
     try:

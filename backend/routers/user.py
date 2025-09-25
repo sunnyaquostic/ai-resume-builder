@@ -9,21 +9,15 @@ from models.userModel import create_user, update_users, get_user_profile
 from api.auth import authenticate_user
 from core.config import settings
 from core.appwrite import get_user_register
+from helper.response import make_response
 import jwt
 import datetime
+
 
 router = APIRouter(
     prefix='/v1',
     tags=['users']
 ) 
-
-def make_response(success: bool, message: str, error: str | None = None, userInfo: dict | None = None):
-    return AuthResponse(
-        success=success,
-        message=message,
-        error=error,
-        userInfo=userInfo
-    )
 
 @router.post('/signup', response_model=AuthResponse)
 def register(user_data: CreateUserSchema, account: Account = Depends(get_account)):

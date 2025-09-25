@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
-from routers import user, services
+from routers import user, services, checkout, admin
 from contextlib import asynccontextmanager
 from models.userModel import init_user_collection
 
@@ -33,6 +33,8 @@ app.add_middleware(
 
 app.include_router(user.router, prefix=settings.API_PREFIX)
 app.include_router(services.router, prefix=settings.API_PREFIX)
+app.include_router(checkout.router, prefix=settings.API_PREFIX)
+app.include_router(admin.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

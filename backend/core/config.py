@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     
     SECRET_KEY: str 
     ALGORITHM: str
+    
+    STRIPE_API_SECRET_KEY: str
+    STRIPE_API_PUBLISHABLE_KEY: str
+    STRIPE_WEBHOOK_SECRET_KEY: str
 
     def __init__(self, **values):
         super().__init__(**values)
