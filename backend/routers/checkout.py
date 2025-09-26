@@ -34,7 +34,6 @@ def stripe_webhook(request: Request):
     if event['type'] == "checkout.session.completed":
         session = event.data.object
         
-        # update user subscription status in the database 
         subscribe_user(
             user_id=session.get("client_reference_id"),
             subscription_id=session.get("subscription"),

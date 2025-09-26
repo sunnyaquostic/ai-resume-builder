@@ -9,6 +9,14 @@ class webhookEventEnum(Enum):
     CHECKOUT_SESSION_COMPLETED = 'checkout.session.completed'
     PAYMENT_INTENT_SUCCEEDED = 'payment_intent.succeeded'
     PAYMENT_INTENT_PAYMENT_FAILED = 'payment_intent.payment_failed'
+    
+    
+class RoleEnum(Enum):
+    USER = "user"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
+    SUPERADMIN = "superadmin"
+    
 
     
     
