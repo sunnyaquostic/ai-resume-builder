@@ -4,7 +4,6 @@ from core.config import settings
 from appwrite.query import Query
 from typing import Dict
 from appwrite.services.account import Account
-from core.appwrite import client
 from datetime import datetime
 
 def get_all_users(db_id: str, collection_id: str):

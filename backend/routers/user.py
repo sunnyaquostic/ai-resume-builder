@@ -13,11 +13,24 @@ from helper.response import make_response
 import jwt
 import datetime
 
-
 router = APIRouter(
     prefix='/v1',
     tags=['users']
 ) 
+
+def create_new_profile(data: ProfileInputSchema):
+    try:
+        payload = data.model_dump(exclude={"confirmPassword"} ,exclude_unset=True)
+        user = create_user(
+            payload, 
+            settings.APPWRITE_DATABASE_ID, 
+            settings.APPWRITE_USER_COLLECTION_ID, 
+            data.user_id
+        )
+        print(f"Profile created: {user}")
+    except Exception as e:
+        print(f"Error creating profile: {str(e)}")
+        return None
 
 @router.post('/signup', response_model=AuthResponse)
 def register(user_data: CreateUserSchema, account: Account = Depends(get_account)):
@@ -37,13 +50,17 @@ def register(user_data: CreateUserSchema, account: Account = Depends(get_account
             name=name,
         )
         
-        if new_user:
-            verification = account.create_verification(
-                url='http://localhost:5173/api/v1/verifyemail'
-            )
-        return make_response(success=True, message="You registered successfully", error=None, userInfo=dict(new_user))
+        if new_user is not None:
+            profiledata = user_data.model_dump()
+            profiledata.update({
+                "user_id": new_user['$id'],
+            })
+
+            create_new_profile(ProfileInputSchema(**profiledata))
+
+        return make_response(AuthResponse, success=True, message="You registered successfully", error=None, userInfo=dict(new_user))
     except Exception as e:
-        return make_response(success=False, message="Registration failed", error=str(e), userInfo=None)
+        return make_response(AuthResponse, success=False, message="Registration failed", error=str(e), userInfo=None)
 
 @router.post("/login", response_model=AuthResponse)
 def login(
@@ -53,9 +70,9 @@ def login(
 ):
     user_session = account.create_email_password_session(
         email=userData.email,
-        password=userData.password
+        password=userData.password 
     )
-
+ 
     payload = {
         "user_id": user_session['userId'],
         "email": user_session['providerUid'],
@@ -65,6 +82,7 @@ def login(
     jwt_token = jwt.encode(payload, settings.SECRET_KEY, settings.ALGORITHM)
 
     auth_response = make_response(
+        AuthResponse,
         success=True,
         message="You logged in successfully",
         error=None,                     

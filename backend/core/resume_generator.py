@@ -105,8 +105,3 @@ class ResumeGenerator:
 
         return text
     
-    
-        
-            
-
-    

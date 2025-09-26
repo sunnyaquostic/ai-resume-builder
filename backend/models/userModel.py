@@ -151,43 +151,8 @@ def get_user_profile(user_id: str):
             queries=[Query.equal("user_id", user_id)]
         )["documents"]
 
-        education = db.list_documents(
-            database_id=settings.APPWRITE_DATABASE_ID,
-            collection_id=settings.APPWRITE_EDUCATION_COLLECTION_ID,
-            queries=[Query.equal("user_id", user_id)]
-        )["documents"]
-
-        experience = db.list_documents(
-            database_id=settings.APPWRITE_DATABASE_ID,
-            collection_id=settings.APPWRITE_EXPERIENCE_COLLECTION_ID,
-            queries=[Query.equal("user_id", user_id)]
-        )["documents"]
-
-        skills = db.list_documents(
-            database_id=settings.APPWRITE_DATABASE_ID,
-            collection_id=settings.APPWRITE_SKILLS_COLLECTION_ID,
-            queries=[Query.equal("user_id", user_id)]
-        )["documents"]
-
-        resume = db.list_documents(
-            database_id=settings.APPWRITE_DATABASE_ID,
-            collection_id=settings.APPWRITE_RESUME_COLLECTION_ID,
-            queries=[Query.equal("user_id", user_id)]
-        )["documents"]
-
-        projects = db.list_documents(
-            database_id=settings.APPWRITE_DATABASE_ID,
-            collection_id=settings.APPWRITE_PROJECT_COLLECTION_ID,
-            queries=[Query.equal("user_id", user_id)]
-        )["documents"]
-
         return {
             "profile": profile[0] if profile else None,
-            "education": education,
-            "experience": experience,
-            "skills": skills,
-            "resume": resume,
-            "projects": projects
         }
             
     except Exception as e:

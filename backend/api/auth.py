@@ -1,7 +1,8 @@
 from fastapi import Depends, HTTPException, status, Cookie
 from appwrite.services.account import Account
 from appwrite.services.users import Users
-from core.appwrite import get_account, get_user_register
+from core.appwrite import database, get_user_register
+from appwrite.query import Query
 from core.config import settings
 import jwt
 import datetime
@@ -17,7 +18,7 @@ def authenticate_user(
         )
     try:
         jwt_info = jwt.decode(access_token, settings.SECRET_KEY, settings.ALGORITHM) 
-        print('this is decoded',jwt_info)
+
         if int(datetime.datetime.now().timestamp()) > jwt_info['exp']:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session token expired!")
         
@@ -42,3 +43,15 @@ def authenticate_user(
             detail="Invalid session token"
         )
 
+def is_admin(user_id: str, role: str) -> bool:
+    db = database()
+    profile = db.list_documents(
+        database_id=settings.APPWRITE_DATABASE_ID,
+        collection_id=settings.APPWRITE_USER_COLLECTION_ID,
+        queries=[Query.equal("user_id", user_id)]
+    )["documents"]
+    
+    if not profile or role != profile[0].get("roles", ""):
+        return False
+    
+    return True

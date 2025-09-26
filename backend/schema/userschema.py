@@ -1,13 +1,20 @@
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 from typing import Dict, Optional, Union
+from schema.enums import RoleEnum
 
 class CreateUserSchema(BaseModel):
     email: str
     name: str = Field(..., min_length=2, max_length=100)
     password: str = Field(..., min_length=8)
     confirmPassword: str = Field(..., min_length=8)
-    # phone_number: str = Field(..., min_length=6, max_length=24)
-    
+    bio: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    user_id: Optional[str] = None
+    roles: RoleEnum = RoleEnum.USER
+
 class AuthResponse(BaseModel):
     success: bool
     message: str
@@ -45,7 +52,7 @@ class ProfileInputSchema(BaseModel):
     address: str | None = None
     linkedin: str | None = None
     github: str | None = None
-    role: str = "user"
+    roles: str = "user"
 
 class ResetPasswordSchema(BaseModel):
     email: Optional[str] = None
