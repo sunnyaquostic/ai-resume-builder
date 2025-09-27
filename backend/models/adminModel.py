@@ -2,9 +2,10 @@ from fastapi import Depends
 from core.appwrite import database, get_account
 from core.config import settings
 from appwrite.query import Query
-from typing import Dict
+from typing import Dict, Literal
 from appwrite.services.account import Account
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 def get_all_users(db_id: str, collection_id: str):
     try:
@@ -46,8 +47,8 @@ def update_user(db_id: str, collection_id: str, doc_id: str, userData: Dict):
             collection_id = collection_id,
             document_id = doc_id,
             data = userData,
-        )['documents']
-
+        )
+        print(f"User updated: {user}")
         return user
     
     except Exception as e:
@@ -70,21 +71,32 @@ def delete_user(db_id: str, collection_id: str, doc_id: str):
 
 def delete_account(user_id: str, account: Account = Depends(get_account)) -> bool:
     try:
-        account.delete(user_id=user_id)
+        account.delete_identity(user_id=user_id)
         return True
     except Exception as e:  
         print(str(e) or "Error occured while deleting user account")
         return False
         
-def get_subscribed_user():
+def get_subscribed_user(user_id: str = None):
     try:
-        current_date = datetime.date()
+        current_date = datetime.now(tz=timezone.utc).isoformat()
         db = database()
-        subscriber = db.list_documents(
-            database_id=settings.APPWRITE_DATABASE_ID,
-            collection_id=settings.APPWRITE_USER_COLLECTION_ID,
-            queries=[Query.less_than_equal("subscription_expiry_date", current_date)]
-        )["documents"]
+        
+        if not user_id:
+            subscriber = db.list_documents(
+                database_id=settings.APPWRITE_DATABASE_ID,
+                collection_id=settings.APPWRITE_USER_COLLECTION_ID,
+                queries=[Query.greater_than_equal("subscription_expiry_date", current_date)]
+            )
+        else:
+            subscriber = db.list_documents(
+                database_id=settings.APPWRITE_DATABASE_ID,
+                collection_id=settings.APPWRITE_USER_COLLECTION_ID,
+                queries=[
+                    Query.equal("user_id", user_id),
+                    Query.greater_than_equal("subscription_expiry_date", current_date)
+                ]
+            )
 
         return subscriber
             
