@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 from core.appwrite import database
 from appwrite.query import Query
-from appwrite.services.databases import Databases
 from typing import Dict
 from appwrite.permission import Permission
 from appwrite.role import Role

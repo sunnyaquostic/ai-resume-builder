@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Request, Header
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from api.auth import authenticate_user
 from core.config import settings
 from helper.subscription import subscribe_user
 from datetime import datetime, timezone
+from lib.stripe import create_checkout
 import stripe 
 
 router = APIRouter(
@@ -58,34 +59,26 @@ def stripe_webhook(request: Request):
     return JSONResponse(status_code=204, content={"status": "no event found"})
 
 @router.post("/create-checkout-session")
-def create_checkout_session(current_user: dict = Depends(authenticate_user)):
+def create_checkout_session(data: str, current_user: dict = Depends(authenticate_user)):
     try:
         user_id = current_user.get("userId")
         email = current_user.get("email")
+        name = current_user.get("name", "Valued Customer")
+        format = data
 
         if not user_id or not email:
             return JSONResponse(status_code=400, content={"error": "User not authenticated"})
-
-        checkout_session = stripe.checkout.Session.create(
-            client_reference_id=user_id,
-            customer_email=email,
-            success_url=settings.STRIPE_SUCCESS_URL,
-            cancel_url=settings.STRIPE_CANCEL_URL,
-            payment_method_types=["card"],
-            mode="payment",
-            line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": 1000,
-                    "product_data": {
-                        "name": "Pro Plan (One-time Purchase)"
-                    },
-                },
-                "quantity": 1,
-            }],
+        
+        create_checkout_session = create_checkout(
+            data = {   
+                "format": format,    
+                "user_id": user_id,
+                "email": email,
+                "name": name
+            }
         )
 
-        return JSONResponse(status_code=200, content={"checkout_url": checkout_session.url})
+        return JSONResponse(status_code=200, content={"checkout_url": create_checkout_session.url})
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})

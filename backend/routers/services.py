@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
 from schema.resumeSchema import ResumeInputSchema, ResumeOutputSchema
 from core.resume_generator import ResumeGenerator
 from models.userModel import get_user_profile
@@ -10,21 +9,18 @@ from core.config import settings
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from docx import Document
-import os, uuid
+import uuid
 import io
 from fastapi.responses import StreamingResponse
 
 router = APIRouter( 
     prefix='/v1',
     tags=['users']
-) 
+)
 @router.post('/resume/create', response_model=ResumeOutputSchema)
 def generate_resume(data: ResumeInputSchema, current_user: Dict = Depends(authenticate_user)):
-    print('from function',current_user)
     user = get_user_profile(current_user['userId'])
-    print(user)
     user_info = user['profile']
-    print('tjis is user_info',user_info)
 
     input_data = data.model_dump()
     input_data.update({

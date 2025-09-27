@@ -32,5 +32,4 @@ def create_checkout(data: CreateSessionSchema):
 
 def checkout_lists():
     sessions = stripe.checkout.Session.list(limit=3) # type: ignore[attr-defined]
-    print(sessions)
     return cast(stripe.checkout.SessionList, sessions)  # type: ignore[name-defined]

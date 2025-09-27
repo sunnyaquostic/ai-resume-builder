@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
+from pydantic import BaseModel, Field, HttpUrl, model_validator
 from typing import Dict, Optional, Union
 from schema.enums import RoleEnum
 

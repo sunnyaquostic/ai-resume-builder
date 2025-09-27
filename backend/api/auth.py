@@ -1,5 +1,4 @@
 from fastapi import Depends, HTTPException, status, Cookie
-from appwrite.services.account import Account
 from appwrite.services.users import Users
 from core.appwrite import database, get_user_register
 from appwrite.query import Query

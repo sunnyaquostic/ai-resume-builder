@@ -32,7 +32,7 @@ def read_users(current_user = Depends(authenticate_user), account: Account = Dep
             )
     
     users = get_all_users(settings.APPWRITE_DATABASE_ID, settings.APPWRITE_USER_COLLECTION_ID)
-    print(users)
+
     if not users or "documents" not in users:
         return admin_response(success=False, message="No users found", error="No user documents", data=None)
 
@@ -69,7 +69,6 @@ def delete_user_profile(user_id: str, current_user: dict = Depends(authenticate_
     delete_user(settings.APPWRITE_DATABASE_ID, settings.APPWRITE_USER_COLLECTION_ID, userExists["profile"]["user_id"])
     
     res = delete_account(userExists["profile"]["user_id"])
-    print(res)
     
     if not res: 
         return admin_response(success=False, message="Failed to delete user account", error="Account deletion failed", data=None)

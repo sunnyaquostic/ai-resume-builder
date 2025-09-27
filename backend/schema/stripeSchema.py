@@ -1,4 +1,4 @@
-from enums import FormatEnum
+from schema.enums import FormatEnum
 
 class CreateSessionSchema:
     format: FormatEnum
