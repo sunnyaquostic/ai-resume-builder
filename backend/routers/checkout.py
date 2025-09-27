@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Request, Header
+from fastapi import APIRouter, Depends, Request, Header
 from fastapi.responses import JSONResponse
+from api.auth import authenticate_user
 from core.config import settings
 from helper.subscription import subscribe_user
 from datetime import datetime, timezone
-import json
 import stripe 
 
 router = APIRouter(
@@ -56,3 +56,36 @@ def stripe_webhook(request: Request):
         })
 
     return JSONResponse(status_code=204, content={"status": "no event found"})
+
+@router.post("/create-checkout-session")
+def create_checkout_session(current_user: dict = Depends(authenticate_user)):
+    try:
+        user_id = current_user.get("userId")
+        email = current_user.get("email")
+
+        if not user_id or not email:
+            return JSONResponse(status_code=400, content={"error": "User not authenticated"})
+
+        checkout_session = stripe.checkout.Session.create(
+            client_reference_id=user_id,
+            customer_email=email,
+            success_url=settings.STRIPE_SUCCESS_URL,
+            cancel_url=settings.STRIPE_CANCEL_URL,
+            payment_method_types=["card"],
+            mode="payment",
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": 1000,
+                    "product_data": {
+                        "name": "Pro Plan (One-time Purchase)"
+                    },
+                },
+                "quantity": 1,
+            }],
+        )
+
+        return JSONResponse(status_code=200, content={"checkout_url": checkout_session.url})
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})

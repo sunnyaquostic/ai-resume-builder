@@ -2,20 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from routers import user, services, checkout, admin
-from contextlib import asynccontextmanager
-from models.userModel import init_user_collection
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     init_user_collection()
-#     print("User collection initialized at startup")
-    
-#     yield
-    
-#     print(App shutting down...")
 
 app = FastAPI(
-    # lifespan=lifespan,
     title="AI Resuming Builder",
     description="Api to generate cool and presentable resuming",
     version="1.0.0",
